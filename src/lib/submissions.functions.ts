@@ -46,19 +46,8 @@ Provide:
 2. "next_steps": a 2-4 sentence actionable suggestion personalized to their country and theme.
 Return strict JSON.`;
 
-    async function audit(action: string, metadata: Record<string, unknown>) {
-      try {
-        await context.supabase.from("admin_actions").insert({
-          actor_id: context.userId,
-          actor_email: context.claims?.email ?? null,
-          action,
-          target_type: "submission",
-          target_country: sub!.country ?? null,
-          target_day_number: sub!.day_number ?? null,
-          target_theme: sub!.theme ?? null,
-          metadata: { submission_id: sub!.id, ...metadata },
-        });
-      } catch { /* best-effort audit */ }
+    async function audit(_action: string, _metadata: Record<string, unknown>) {
+      // Audit log table not present in current schema — no-op.
     }
 
     try {
@@ -77,7 +66,6 @@ Return strict JSON.`;
           ai_feedback: out.feedback,
           ai_next_steps: out.next_steps,
           status: "reviewed",
-          reviewed_at: new Date().toISOString(),
         })
         .eq("id", data.submissionId);
       if (updErr) throw updErr;

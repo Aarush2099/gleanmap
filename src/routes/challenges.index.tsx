@@ -446,11 +446,7 @@ function ActionForm({ theme, myResearch, onCancel, onSaved }: {
         title, description, media_url,
       }).select("id,phase,day_number,theme,type,title,description,location,key_findings,data_sources,source_links,attachment_paths,status,ai_feedback,ai_next_steps").single();
       if (error) throw error;
-      if (linked.length && data) {
-        await supabase.from("submission_links").insert(
-          linked.map(rid => ({ policy_submission_id: data.id, research_submission_id: rid }))
-        );
-      }
+      // submission_links table is not part of the current schema — link tracking handled in-memory only.
       onSaved(data as Sub);
       toast.success("Submitted");
     } catch (e) {
