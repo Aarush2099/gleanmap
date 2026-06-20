@@ -10,315 +10,398 @@ export type Database = {
   // Allows to automatically instantiate createClient with right options
   // instead of createClient<Database, { PostgrestVersion: 'XX' }>(URL, KEY)
   __InternalSupabase: {
-    PostgrestVersion: "14.5"
+    PostgrestVersion: "14.1"
   }
   public: {
     Tables: {
-      admin_actions: {
+      fruit_types: {
         Row: {
-          action: string
-          actor_email: string | null
-          actor_id: string | null
+          category: string | null
           created_at: string
+          icon: string | null
           id: string
-          metadata: Json
-          target_country: string | null
-          target_day_number: number | null
-          target_theme: string | null
-          target_type: string | null
-          target_year: number | null
+          name: string
+          season_end: number | null
+          season_start: number | null
         }
         Insert: {
-          action: string
-          actor_email?: string | null
-          actor_id?: string | null
+          category?: string | null
           created_at?: string
+          icon?: string | null
           id?: string
-          metadata?: Json
-          target_country?: string | null
-          target_day_number?: number | null
-          target_theme?: string | null
-          target_type?: string | null
-          target_year?: number | null
+          name: string
+          season_end?: number | null
+          season_start?: number | null
         }
         Update: {
-          action?: string
-          actor_email?: string | null
-          actor_id?: string | null
+          category?: string | null
+          created_at?: string
+          icon?: string | null
+          id?: string
+          name?: string
+          season_end?: number | null
+          season_start?: number | null
+        }
+        Relationships: []
+      }
+      messages: {
+        Row: {
+          content: string
+          created_at: string
+          id: string
+          is_read: boolean
+          receiver_id: string
+          sender_id: string
+          tree_id: string | null
+        }
+        Insert: {
+          content: string
           created_at?: string
           id?: string
-          metadata?: Json
-          target_country?: string | null
-          target_day_number?: number | null
-          target_theme?: string | null
-          target_type?: string | null
-          target_year?: number | null
+          is_read?: boolean
+          receiver_id: string
+          sender_id: string
+          tree_id?: string | null
+        }
+        Update: {
+          content?: string
+          created_at?: string
+          id?: string
+          is_read?: boolean
+          receiver_id?: string
+          sender_id?: string
+          tree_id?: string | null
         }
         Relationships: [
           {
-            foreignKeyName: "admin_actions_actor_id_fkey"
-            columns: ["actor_id"]
+            foreignKeyName: "messages_tree_id_fkey"
+            columns: ["tree_id"]
             isOneToOne: false
-            referencedRelation: "profiles"
+            referencedRelation: "trees"
             referencedColumns: ["id"]
           },
         ]
       }
-      admin_emails: {
+      notifications: {
         Row: {
           created_at: string
-          email: string
+          id: string
+          is_read: boolean
+          message: string | null
+          title: string
+          tree_id: string | null
+          type: string
+          user_id: string
         }
         Insert: {
           created_at?: string
-          email: string
+          id?: string
+          is_read?: boolean
+          message?: string | null
+          title: string
+          tree_id?: string | null
+          type: string
+          user_id: string
         }
         Update: {
           created_at?: string
-          email?: string
-        }
-        Relationships: []
-      }
-      country_challenges: {
-        Row: {
-          action_prompt: string | null
-          approved_at: string | null
-          approved_by: string | null
-          brief: string | null
-          country: string
-          created_at: string
-          day_number: number
-          generated_at: string | null
-          prompt: string | null
-          small_sample: boolean
-          source_research_ids: string[]
-          status: Database["public"]["Enums"]["country_challenge_status"]
-          submission_count: number
-          success_criteria: string | null
-          summary: string | null
-          theme: string
-          title: string | null
-          updated_at: string
-          year: number
-        }
-        Insert: {
-          action_prompt?: string | null
-          approved_at?: string | null
-          approved_by?: string | null
-          brief?: string | null
-          country: string
-          created_at?: string
-          day_number: number
-          generated_at?: string | null
-          prompt?: string | null
-          small_sample?: boolean
-          source_research_ids?: string[]
-          status?: Database["public"]["Enums"]["country_challenge_status"]
-          submission_count?: number
-          success_criteria?: string | null
-          summary?: string | null
-          theme: string
-          title?: string | null
-          updated_at?: string
-          year?: number
-        }
-        Update: {
-          action_prompt?: string | null
-          approved_at?: string | null
-          approved_by?: string | null
-          brief?: string | null
-          country?: string
-          created_at?: string
-          day_number?: number
-          generated_at?: string | null
-          prompt?: string | null
-          small_sample?: boolean
-          source_research_ids?: string[]
-          status?: Database["public"]["Enums"]["country_challenge_status"]
-          submission_count?: number
-          success_criteria?: string | null
-          summary?: string | null
-          theme?: string
-          title?: string | null
-          updated_at?: string
-          year?: number
+          id?: string
+          is_read?: boolean
+          message?: string | null
+          title?: string
+          tree_id?: string | null
+          type?: string
+          user_id?: string
         }
         Relationships: [
           {
-            foreignKeyName: "country_challenges_approved_by_fkey"
-            columns: ["approved_by"]
+            foreignKeyName: "notifications_tree_id_fkey"
+            columns: ["tree_id"]
             isOneToOne: false
-            referencedRelation: "profiles"
+            referencedRelation: "trees"
             referencedColumns: ["id"]
           },
         ]
       }
       profiles: {
         Row: {
-          country: string | null
+          avatar_url: string | null
+          badges: string[] | null
+          bio: string | null
           created_at: string
-          email: string
-          full_name: string | null
+          display_name: string | null
+          gleaner_score: number
           id: string
-          role: Database["public"]["Enums"]["app_role"]
-          school: string | null
+          is_verified: boolean
+          people_fed: number
+          pounds_saved: number
+          trust_score: number | null
           updated_at: string
+          user_id: string
+          username: string | null
         }
         Insert: {
-          country?: string | null
+          avatar_url?: string | null
+          badges?: string[] | null
+          bio?: string | null
           created_at?: string
-          email: string
-          full_name?: string | null
-          id: string
-          role?: Database["public"]["Enums"]["app_role"]
-          school?: string | null
+          display_name?: string | null
+          gleaner_score?: number
+          id?: string
+          is_verified?: boolean
+          people_fed?: number
+          pounds_saved?: number
+          trust_score?: number | null
           updated_at?: string
+          user_id: string
+          username?: string | null
         }
         Update: {
-          country?: string | null
+          avatar_url?: string | null
+          badges?: string[] | null
+          bio?: string | null
           created_at?: string
-          email?: string
-          full_name?: string | null
+          display_name?: string | null
+          gleaner_score?: number
           id?: string
-          role?: Database["public"]["Enums"]["app_role"]
-          school?: string | null
+          is_verified?: boolean
+          people_fed?: number
+          pounds_saved?: number
+          trust_score?: number | null
           updated_at?: string
+          user_id?: string
+          username?: string | null
         }
         Relationships: []
       }
-      program_themes: {
+      reservations: {
         Row: {
           created_at: string
-          day_number: number
-          is_rest_day: boolean
-          prompt: string | null
-          theme: string
-          year: number
-        }
-        Insert: {
-          created_at?: string
-          day_number: number
-          is_rest_day?: boolean
-          prompt?: string | null
-          theme: string
-          year?: number
-        }
-        Update: {
-          created_at?: string
-          day_number?: number
-          is_rest_day?: boolean
-          prompt?: string | null
-          theme?: string
-          year?: number
-        }
-        Relationships: []
-      }
-      submission_links: {
-        Row: {
-          created_at: string
-          policy_submission_id: string
-          research_submission_id: string
-        }
-        Insert: {
-          created_at?: string
-          policy_submission_id: string
-          research_submission_id: string
-        }
-        Update: {
-          created_at?: string
-          policy_submission_id?: string
-          research_submission_id?: string
-        }
-        Relationships: [
-          {
-            foreignKeyName: "submission_links_policy_submission_id_fkey"
-            columns: ["policy_submission_id"]
-            isOneToOne: false
-            referencedRelation: "submissions"
-            referencedColumns: ["id"]
-          },
-          {
-            foreignKeyName: "submission_links_research_submission_id_fkey"
-            columns: ["research_submission_id"]
-            isOneToOne: false
-            referencedRelation: "submissions"
-            referencedColumns: ["id"]
-          },
-        ]
-      }
-      submissions: {
-        Row: {
-          ai_feedback: string | null
-          ai_next_steps: string | null
-          attachment_paths: string[]
-          country: string | null
-          data_sources: string | null
-          day_number: number | null
-          description: string | null
+          current_participants: number | null
           id: string
-          key_findings: string | null
-          location: string | null
-          media_url: string | null
-          phase: Database["public"]["Enums"]["submission_phase"]
-          reviewed_at: string | null
-          source_links: string[]
-          status: Database["public"]["Enums"]["submission_status"]
-          submitted_at: string
-          theme: string
-          title: string
-          type: Database["public"]["Enums"]["submission_type"]
+          max_participants: number | null
+          notes: string | null
+          owner_id: string | null
+          qr_code: string | null
+          scheduled_date: string
+          scheduled_time: string | null
+          status: string
+          tree_id: string
+          updated_at: string
           user_id: string
         }
         Insert: {
-          ai_feedback?: string | null
-          ai_next_steps?: string | null
-          attachment_paths?: string[]
-          country?: string | null
-          data_sources?: string | null
-          day_number?: number | null
-          description?: string | null
+          created_at?: string
+          current_participants?: number | null
           id?: string
-          key_findings?: string | null
-          location?: string | null
-          media_url?: string | null
-          phase: Database["public"]["Enums"]["submission_phase"]
-          reviewed_at?: string | null
-          source_links?: string[]
-          status?: Database["public"]["Enums"]["submission_status"]
-          submitted_at?: string
-          theme: string
-          title: string
-          type: Database["public"]["Enums"]["submission_type"]
+          max_participants?: number | null
+          notes?: string | null
+          owner_id?: string | null
+          qr_code?: string | null
+          scheduled_date: string
+          scheduled_time?: string | null
+          status?: string
+          tree_id: string
+          updated_at?: string
           user_id: string
         }
         Update: {
-          ai_feedback?: string | null
-          ai_next_steps?: string | null
-          attachment_paths?: string[]
-          country?: string | null
-          data_sources?: string | null
-          day_number?: number | null
-          description?: string | null
+          created_at?: string
+          current_participants?: number | null
           id?: string
-          key_findings?: string | null
-          location?: string | null
-          media_url?: string | null
-          phase?: Database["public"]["Enums"]["submission_phase"]
-          reviewed_at?: string | null
-          source_links?: string[]
-          status?: Database["public"]["Enums"]["submission_status"]
-          submitted_at?: string
-          theme?: string
-          title?: string
-          type?: Database["public"]["Enums"]["submission_type"]
+          max_participants?: number | null
+          notes?: string | null
+          owner_id?: string | null
+          qr_code?: string | null
+          scheduled_date?: string
+          scheduled_time?: string | null
+          status?: string
+          tree_id?: string
+          updated_at?: string
           user_id?: string
         }
         Relationships: [
           {
-            foreignKeyName: "submissions_user_id_fkey"
-            columns: ["user_id"]
+            foreignKeyName: "reservations_tree_id_fkey"
+            columns: ["tree_id"]
             isOneToOne: false
-            referencedRelation: "profiles"
+            referencedRelation: "trees"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      tree_comments: {
+        Row: {
+          content: string
+          created_at: string
+          id: string
+          tree_id: string
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          content: string
+          created_at?: string
+          id?: string
+          tree_id: string
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          content?: string
+          created_at?: string
+          id?: string
+          tree_id?: string
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "tree_comments_tree_id_fkey"
+            columns: ["tree_id"]
+            isOneToOne: false
+            referencedRelation: "trees"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      tree_likes: {
+        Row: {
+          created_at: string
+          id: string
+          tree_id: string
+          user_id: string
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          tree_id: string
+          user_id: string
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          tree_id?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "tree_likes_tree_id_fkey"
+            columns: ["tree_id"]
+            isOneToOne: false
+            referencedRelation: "trees"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      tree_visits: {
+        Row: {
+          comment: string | null
+          id: string
+          pounds_harvested: number | null
+          rating: number | null
+          tree_id: string
+          user_id: string
+          visit_date: string
+          visited_at: string
+        }
+        Insert: {
+          comment?: string | null
+          id?: string
+          pounds_harvested?: number | null
+          rating?: number | null
+          tree_id: string
+          user_id: string
+          visit_date?: string
+          visited_at?: string
+        }
+        Update: {
+          comment?: string | null
+          id?: string
+          pounds_harvested?: number | null
+          rating?: number | null
+          tree_id?: string
+          user_id?: string
+          visit_date?: string
+          visited_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "tree_visits_tree_id_fkey"
+            columns: ["tree_id"]
+            isOneToOne: false
+            referencedRelation: "trees"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      trees: {
+        Row: {
+          address: string | null
+          created_at: string
+          description: string | null
+          fruit_type_id: string | null
+          fuzzed_latitude: number | null
+          fuzzed_longitude: number | null
+          glean_count: number
+          id: string
+          image_url: string | null
+          is_active: boolean
+          is_ripe: boolean
+          last_gleaned_at: string | null
+          latitude: number
+          longitude: number
+          owner_id: string | null
+          privacy_level: string
+          ripeness_percent: number | null
+          updated_at: string
+        }
+        Insert: {
+          address?: string | null
+          created_at?: string
+          description?: string | null
+          fruit_type_id?: string | null
+          fuzzed_latitude?: number | null
+          fuzzed_longitude?: number | null
+          glean_count?: number
+          id?: string
+          image_url?: string | null
+          is_active?: boolean
+          is_ripe?: boolean
+          last_gleaned_at?: string | null
+          latitude: number
+          longitude: number
+          owner_id?: string | null
+          privacy_level?: string
+          ripeness_percent?: number | null
+          updated_at?: string
+        }
+        Update: {
+          address?: string | null
+          created_at?: string
+          description?: string | null
+          fruit_type_id?: string | null
+          fuzzed_latitude?: number | null
+          fuzzed_longitude?: number | null
+          glean_count?: number
+          id?: string
+          image_url?: string | null
+          is_active?: boolean
+          is_ripe?: boolean
+          last_gleaned_at?: string | null
+          latitude?: number
+          longitude?: number
+          owner_id?: string | null
+          privacy_level?: string
+          ripeness_percent?: number | null
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "trees_fruit_type_id_fkey"
+            columns: ["fruit_type_id"]
+            isOneToOne: false
+            referencedRelation: "fruit_types"
             referencedColumns: ["id"]
           },
         ]
@@ -328,25 +411,10 @@ export type Database = {
       [_ in never]: never
     }
     Functions: {
-      has_role: {
-        Args: {
-          _role: Database["public"]["Enums"]["app_role"]
-          _user_id: string
-        }
-        Returns: boolean
-      }
+      [_ in never]: never
     }
     Enums: {
-      app_role: "student" | "admin"
-      country_challenge_status:
-        | "pending"
-        | "generating"
-        | "ready"
-        | "failed"
-        | "approved"
-      submission_phase: "october_research" | "november_action"
-      submission_status: "submitted" | "reviewed"
-      submission_type: "regional_audit" | "policy_change"
+      [_ in never]: never
     }
     CompositeTypes: {
       [_ in never]: never
@@ -473,18 +541,6 @@ export type CompositeTypes<
 
 export const Constants = {
   public: {
-    Enums: {
-      app_role: ["student", "admin"],
-      country_challenge_status: [
-        "pending",
-        "generating",
-        "ready",
-        "failed",
-        "approved",
-      ],
-      submission_phase: ["october_research", "november_action"],
-      submission_status: ["submitted", "reviewed"],
-      submission_type: ["regional_audit", "policy_change"],
-    },
+    Enums: {},
   },
 } as const
