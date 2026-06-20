@@ -1,60 +1,73 @@
-Scoped extension — does not touch the public PGC AI chatbot. Builds on existing auth, profiles, `submissions`, `submission_links`, admin dashboard, and storage bucket.
+# What's actually wrong
 
-## Part 1 — Themes in a config table (swappable year-over-year)
+The site has two layers that don't match each other:
 
-New table `public.program_themes`:
-- `year int` (default 2026), `day_number int 1..30`, `theme text`, `prompt text` (one-line October research prompt), `is_rest_day bool` (default false), `created_at`. PK `(year, day_number)`.
-- GRANT SELECT to `anon, authenticated`; GRANT ALL to `service_role`. RLS on, single policy: `SELECT` for all (it's public reference data). Writes only via migration/service role.
-- Seed 2026 with the real 30-day list:
-  1 Why · 2 Footprint · 3 Cities · 4 Food · 5 Water · 6 Fashion · 7 Waste · 8 Oceans · 9 Climate Justice · 10 Holiday (rest) · 11 Forests · 12 Outdoors · 13 Indigenous Peoples · 14 Body · 15 Soil · 16 Holiday (rest) · 17 Food Waste · 18 Wellness · 19 Connect · 20 Plant-Based · 21 Fair Trade · 22 Nature · 23 Purpose · 24 Energy · 25 Advocate · 26 Holiday (rest) · 27 Commitment · 28 Activate · 29 Reflect · 30 Inspire.
-- Days 10/16/26 default to optional rest days (no research topic) per the note.
-- Delete `src/lib/pgc-themes.ts` and replace consumers with a `getThemes(year)` server fn / cached client read.
+- **Database**: still the old GleanMap tables (`trees`, `fruit_types`, `messages`, `reservations`, `tree_*`, plus a `profiles` table with `gleaner_score`/`pounds_saved`/`badges`). No `submissions`, no `program_themes`, no `country_challenges`, no `admin_emails`, no `role` column.
+- **App code**: PGC 2026 — reads `submissions`, `program_themes`, `country_challenges`, `profiles.role`, etc.
 
-November Day N reuses October Day N's row — no second theme list anywhere.
+Result: every authenticated page silently fails, admin can never be granted, and your bug ("admin can't log in to /admin") is just the most visible symptom. There is no `admin_emails` table to fix — we need to build the real schema.
 
-## Part 2 — November "challenge not ready yet" state (no hard lock)
+I'll do this in 3 batches so each one is reviewable.
 
-New table `public.country_challenges`:
-- `year`, `country` (ISO), `day_number`, `theme` (denormalized), `status` enum `pending | generating | ready | failed`, `prompt text`, `summary text`, `source_research_ids uuid[]`, `generated_at`, `created_at`, `updated_at`. PK `(year, country, day_number)`.
-- GRANT SELECT to `authenticated`; ALL to `service_role`. RLS: any authenticated user may SELECT their own country's row; only admins (via `has_role`) may INSERT/UPDATE.
-- Index on `(year, country, day_number)`.
+---
 
-UI: On November day cards, if no row or `status != 'ready'` → render a "Your country's November challenge is being prepared" panel (with theme + a short explainer) instead of the current lock. If `ready` → show `prompt` + `summary`, then the existing Action submission form (linked back to October research as today).
+## Batch 1 — Database reset + admin grant (migration, needs your approval)
 
-AI generation itself (server fn that aggregates October submissions per country/day and writes `country_challenges`) is scaffolded as `generateCountryChallenge({ year, country, day })`, admin-only, callable from the admin dashboard. Bulk "generate for all countries with research" button. Uses existing `ai-gateway.server.ts` + Gemini with strict JSON. (No auto-cron this round — admin-triggered.)
+Single migration that:
 
-## Part 3 — Simplified October flow (Regional Audit only)
+1. **Drops GleanMap tables** (`trees`, `tree_likes`, `tree_comments`, `tree_visits`, `reservations`, `messages`, `notifications`, `fruit_types`) and rebuilds `profiles` with the PGC shape (`id`=auth user id, `email`, `full_name`, `country`, `school`, `created_at`, `points int default 0`, `participant_number text`).
+2. **Roles done right** (no `admin_emails`): `app_role` enum + `user_roles` table + `has_role(user, role)` security-definer function. This is the pattern we already standardize on. `profiles.role` view-helper column is dropped; the app reads roles via `has_role`.
+3. **Creates the PGC tables** with full GRANTs + RLS + policies, in order:
+   - `program_themes(year, day_number, theme, prompt, is_rest_day)` — seeded with the real 30 themes (Why, Footprint, Cities, Food, Water, Fashion, Waste, Oceans, Climate Justice, Holiday, Forests, Outdoors, Indigenous Peoples, Body, Soil, Holiday, Food Waste, Wellness, Connect, Plant-Based, Fair Trade, Nature, Purpose, Energy, Advocate, Holiday, Commitment, Activate, Reflect, Inspire). Days 10/16/26 marked `is_rest_day`.
+   - `submissions(user_id, country, phase, day_number, theme, location, key_findings, data_sources, source_links[], attachment_paths[], ai_feedback, ai_next_steps, status, submitted_at)` with points trigger.
+   - `country_challenges(year, country, day_number, theme, status, prompt, summary, title, brief, action_prompt, success_criteria, ...)` — November per-country.
+   - `achievements(code, name, description, icon)` + `user_achievements(user_id, code, unlocked_at)` — seeded with First Audit, Field Researcher, Streak Keeper, October Complete, Changemaker, Top 10, Trailblazer.
+4. **Points trigger** on `submissions` insert: +100 october_research, +50 november_action; on `submissions` update when `status` becomes `reviewed`: +25.
+5. **Triggers**: handle_new_user replaces the GleanMap version (creates a PGC profile row, generates a 6-char participant number, copies country from `raw_user_meta_data`). Auto-unlock achievement rows when criteria met (First Audit, Field Researcher = 5 audits, Streak Keeper = 5-day streak, October Complete = 27/27 non-rest days).
+6. **Storage**: drop `tree-images` bucket, create private `submissions` bucket with per-user RLS.
+7. **Grant admin to `aarushmahajan2008@gmail.com`**: insert into `user_roles` for that auth user id (looked up by email in `auth.users`). If the user hasn't signed up yet, the migration creates a one-shot trigger so the role is granted on first signup with that exact email.
 
-Rewrite `/challenges` Research tab card to be exactly:
-- Header: `Day N · {theme}` + one-line `prompt` from `program_themes`.
-- Rest days (10/16/26): show "Rest day — no submission required" and no form.
-- Form fields (replace current title/description/file): `location` (city/region text, prefilled from profile country), `key_findings` (textarea, required), `data_sources` (textarea), `source_links` (repeatable URL inputs), `attachments` (multi-file upload to `submissions` bucket).
-- Remove tiers/points/social-post/PDF-naming rules — none of those existed in our build, just don't add them.
-- On submit: insert into `submissions` with `phase='october_research'`, `day_number`, `theme`, plus new columns; on success show a clean structured summary card of what was just submitted (location, findings preview, sources, file count) with "Edit" / "Submit another for this day".
+After this migration runs, /admin works for that one email and is blocked for everyone else.
 
-Schema additions to `public.submissions` (additive, nullable):
-- `location text`, `key_findings text`, `data_sources text`, `source_links text[]`, `attachment_paths text[]`.
-- Keep existing `title/description/media_url` for backward-compat with November Action (which still uses title/description). October writes leave `title` = `"{theme} — Day {N}"` auto-generated for admin readability.
+## Batch 2 — Code cleanup + 30-day truth + Hub/nav fixes
 
-November Action card: unchanged structure, but reads theme from `program_themes` and shows the Part 2 "preparing" / `ready` state above the form.
+Pure code edits, no DB. After Batch 1's regenerated `types.ts` lands:
 
-## Part 4 — Admin dashboard additions
+- `useAuth` reads role via `has_role` RPC, exposes `isAdmin`. `/admin` uses `isAdmin` instead of `profile.role`.
+- **Purge "60 days" everywhere** — confirmed locations: `src/lib/i18n.tsx` (5 strings), `src/routes/about.tsx`, `src/routes/faq.tsx`, `src/routes/schools.tsx`, `src/routes/__root.tsx`, `src/lib/api/pgc-ai.functions.ts`. Replace with "30 days of research. 30 days of action." copy you specified.
+- **Hub** (`src/routes/hub.tsx`): footer tagline → "30 days of action. One global movement." Guest preview tile rewrite to "30-Day Research" + "30-Day Action". Remove "60-Day Timeline" tile.
+- **Hub nav**: it already has the single "Challenges & Research" entry — but I'll audit a per-page secondary nav you mentioned ("October · Research" + "November · Action") and consolidate to one.
+- **`/challenges` headline**: "30 days of research. 30 days of action."
+- **Challenges form**: already the right shape (location / key findings / data sources / source_links / file upload). Verified no tier/social-post logic in code.
+- **Themes**: already config-driven via `program_themes`. Delete the dead `src/lib/challenges.ts` (the universities mock + the 60-row generator) — nothing keeps using it after the leaderboard rewrite below.
 
-- New "Country Challenges" tab listing `country_challenges` rows with filters by country/day/status.
-- Per-row "Generate" button → `generateCountryChallenge`. Bulk action per country.
-- Existing per-submission "Generate AI Feedback" stays untouched.
+## Batch 3 — Climate Passport profile + real leaderboard + nav avatar
 
-## Out of scope
+- **`/profile` rewrite** as Climate Passport (replaces current form-based profile):
+  - Passport card: country flag (emoji from ISO derived from country name), full name, participant number, join date, country name.
+  - 30-stamp grid for October days — filled stamps for completed days, dotted empty for unfilled, theme name + day number on each.
+  - Stats strip: total points, country rank (computed via RPC), current streak, X/30 complete.
+  - Achievement visa stickers — locked = greyed, unlocked = full color with unlock date.
+  - November section: per-day cards keyed off `country_challenges` (status=approved) for the user's country.
+  - **Export as Image** button using `html-to-image` (already installed).
+- **Header nav**: profile link is already there when signed in; I'll swap the text-with-name pill for a circular avatar/initials button linked to `/profile`.
+- **`/leaderboard` rewrite** (delete fake universities entirely):
+  - Tabs: **Individuals** and **Countries**.
+  - Individuals: rank by `profiles.points` desc, tiebreak by first submission date (RPC). 25/page. Pin the signed-in user's row at the bottom with their real rank ("You are ranked #482") even if outside the page.
+  - Countries: sum points by country, count participants, sort desc.
+  - Remove "prototype review" disclaimer, all hardcoded names/scores, the financial-index styling kept but powered by real data.
 
-- The public PGC AI chatbot (untouched).
-- Real cron / scheduled November generation.
-- Migrating any existing test submissions to the new columns (additive nullable, old rows still render).
+---
 
-## Technical notes
+## Out of scope (won't touch this round)
 
-- Migrations in one batch: create `program_themes`, seed 2026, create `country_challenges`, add new columns to `submissions`. All with GRANTs + RLS in same migration.
-- Server fns in `src/lib/themes.functions.ts`, `src/lib/country-challenges.functions.ts`. Admin-only fns use `requireSupabaseAuth` + `has_role('admin')`.
-- Themes fetched once on `/challenges` mount via TanStack Query; cached.
-- Delete `src/lib/pgc-themes.ts` after consumers are migrated.
+- Mapbox / location features (you said "later").
+- Auth email templates / password reset flow.
+- Translating new copy into the other languages in `i18n.tsx` (English strings updated; other locales keep their existing strings until you ask).
 
-Proceeding will take ~2 batches: (1) migration, (2) code (server fns + Challenges rewrite + admin tab). Confirm to proceed.
+## Risks to call out
+
+- **Dropping GleanMap tables wipes any data in them.** Given you said "that project is gone," I'm assuming this is fine. If any of that data matters, say so and I'll skip the drops and leave them orphaned instead.
+- After Batch 1 you'll need to sign up (or already be signed up) with `aarushmahajan2008@gmail.com` for the admin role to attach to a real auth user. The migration handles either order.
+
+Confirm and I'll start with Batch 1 (the migration).

@@ -14,407 +14,311 @@ export type Database = {
   }
   public: {
     Tables: {
-      fruit_types: {
+      achievements: {
         Row: {
-          category: string | null
-          created_at: string
+          code: string
+          description: string
           icon: string | null
-          id: string
           name: string
-          season_end: number | null
-          season_start: number | null
+          sort_order: number
         }
         Insert: {
-          category?: string | null
-          created_at?: string
+          code: string
+          description: string
           icon?: string | null
-          id?: string
           name: string
-          season_end?: number | null
-          season_start?: number | null
+          sort_order?: number
         }
         Update: {
-          category?: string | null
-          created_at?: string
+          code?: string
+          description?: string
           icon?: string | null
-          id?: string
           name?: string
-          season_end?: number | null
-          season_start?: number | null
+          sort_order?: number
         }
         Relationships: []
       }
-      messages: {
+      country_challenges: {
         Row: {
-          content: string
+          action_prompt: string | null
+          approved_at: string | null
+          brief: string | null
+          country: string
           created_at: string
-          id: string
-          is_read: boolean
-          receiver_id: string
-          sender_id: string
-          tree_id: string | null
+          day_number: number
+          generated_at: string | null
+          prompt: string | null
+          small_sample: boolean | null
+          source_research_ids: string[] | null
+          status: string
+          submission_count: number | null
+          success_criteria: string | null
+          summary: string | null
+          theme: string
+          title: string | null
+          updated_at: string
+          year: number
         }
         Insert: {
-          content: string
+          action_prompt?: string | null
+          approved_at?: string | null
+          brief?: string | null
+          country: string
           created_at?: string
-          id?: string
-          is_read?: boolean
-          receiver_id: string
-          sender_id: string
-          tree_id?: string | null
+          day_number: number
+          generated_at?: string | null
+          prompt?: string | null
+          small_sample?: boolean | null
+          source_research_ids?: string[] | null
+          status?: string
+          submission_count?: number | null
+          success_criteria?: string | null
+          summary?: string | null
+          theme: string
+          title?: string | null
+          updated_at?: string
+          year: number
         }
         Update: {
-          content?: string
+          action_prompt?: string | null
+          approved_at?: string | null
+          brief?: string | null
+          country?: string
           created_at?: string
-          id?: string
-          is_read?: boolean
-          receiver_id?: string
-          sender_id?: string
-          tree_id?: string | null
+          day_number?: number
+          generated_at?: string | null
+          prompt?: string | null
+          small_sample?: boolean | null
+          source_research_ids?: string[] | null
+          status?: string
+          submission_count?: number | null
+          success_criteria?: string | null
+          summary?: string | null
+          theme?: string
+          title?: string | null
+          updated_at?: string
+          year?: number
         }
-        Relationships: [
-          {
-            foreignKeyName: "messages_tree_id_fkey"
-            columns: ["tree_id"]
-            isOneToOne: false
-            referencedRelation: "trees"
-            referencedColumns: ["id"]
-          },
-        ]
-      }
-      notifications: {
-        Row: {
-          created_at: string
-          id: string
-          is_read: boolean
-          message: string | null
-          title: string
-          tree_id: string | null
-          type: string
-          user_id: string
-        }
-        Insert: {
-          created_at?: string
-          id?: string
-          is_read?: boolean
-          message?: string | null
-          title: string
-          tree_id?: string | null
-          type: string
-          user_id: string
-        }
-        Update: {
-          created_at?: string
-          id?: string
-          is_read?: boolean
-          message?: string | null
-          title?: string
-          tree_id?: string | null
-          type?: string
-          user_id?: string
-        }
-        Relationships: [
-          {
-            foreignKeyName: "notifications_tree_id_fkey"
-            columns: ["tree_id"]
-            isOneToOne: false
-            referencedRelation: "trees"
-            referencedColumns: ["id"]
-          },
-        ]
+        Relationships: []
       }
       profiles: {
         Row: {
-          avatar_url: string | null
-          badges: string[] | null
-          bio: string | null
+          country: string | null
           created_at: string
-          display_name: string | null
-          gleaner_score: number
+          email: string
+          first_submission_at: string | null
+          full_name: string | null
           id: string
-          is_verified: boolean
-          people_fed: number
-          pounds_saved: number
-          trust_score: number | null
+          participant_number: string
+          points: number
+          school: string | null
           updated_at: string
-          user_id: string
-          username: string | null
         }
         Insert: {
-          avatar_url?: string | null
-          badges?: string[] | null
-          bio?: string | null
+          country?: string | null
           created_at?: string
-          display_name?: string | null
-          gleaner_score?: number
-          id?: string
-          is_verified?: boolean
-          people_fed?: number
-          pounds_saved?: number
-          trust_score?: number | null
+          email: string
+          first_submission_at?: string | null
+          full_name?: string | null
+          id: string
+          participant_number?: string
+          points?: number
+          school?: string | null
           updated_at?: string
-          user_id: string
-          username?: string | null
         }
         Update: {
-          avatar_url?: string | null
-          badges?: string[] | null
-          bio?: string | null
+          country?: string | null
           created_at?: string
-          display_name?: string | null
-          gleaner_score?: number
+          email?: string
+          first_submission_at?: string | null
+          full_name?: string | null
           id?: string
-          is_verified?: boolean
-          people_fed?: number
-          pounds_saved?: number
-          trust_score?: number | null
+          participant_number?: string
+          points?: number
+          school?: string | null
           updated_at?: string
-          user_id?: string
-          username?: string | null
         }
         Relationships: []
       }
-      reservations: {
+      program_themes: {
         Row: {
           created_at: string
-          current_participants: number | null
-          id: string
-          max_participants: number | null
-          notes: string | null
-          owner_id: string | null
-          qr_code: string | null
-          scheduled_date: string
-          scheduled_time: string | null
-          status: string
-          tree_id: string
-          updated_at: string
-          user_id: string
+          day_number: number
+          is_rest_day: boolean
+          prompt: string | null
+          theme: string
+          year: number
         }
         Insert: {
           created_at?: string
-          current_participants?: number | null
-          id?: string
-          max_participants?: number | null
-          notes?: string | null
-          owner_id?: string | null
-          qr_code?: string | null
-          scheduled_date: string
-          scheduled_time?: string | null
-          status?: string
-          tree_id: string
-          updated_at?: string
-          user_id: string
+          day_number: number
+          is_rest_day?: boolean
+          prompt?: string | null
+          theme: string
+          year: number
         }
         Update: {
           created_at?: string
-          current_participants?: number | null
-          id?: string
-          max_participants?: number | null
-          notes?: string | null
-          owner_id?: string | null
-          qr_code?: string | null
-          scheduled_date?: string
-          scheduled_time?: string | null
-          status?: string
-          tree_id?: string
-          updated_at?: string
-          user_id?: string
+          day_number?: number
+          is_rest_day?: boolean
+          prompt?: string | null
+          theme?: string
+          year?: number
         }
-        Relationships: [
-          {
-            foreignKeyName: "reservations_tree_id_fkey"
-            columns: ["tree_id"]
-            isOneToOne: false
-            referencedRelation: "trees"
-            referencedColumns: ["id"]
-          },
-        ]
+        Relationships: []
       }
-      tree_comments: {
+      submissions: {
         Row: {
-          content: string
-          created_at: string
-          id: string
-          tree_id: string
-          updated_at: string
-          user_id: string
-        }
-        Insert: {
-          content: string
-          created_at?: string
-          id?: string
-          tree_id: string
-          updated_at?: string
-          user_id: string
-        }
-        Update: {
-          content?: string
-          created_at?: string
-          id?: string
-          tree_id?: string
-          updated_at?: string
-          user_id?: string
-        }
-        Relationships: [
-          {
-            foreignKeyName: "tree_comments_tree_id_fkey"
-            columns: ["tree_id"]
-            isOneToOne: false
-            referencedRelation: "trees"
-            referencedColumns: ["id"]
-          },
-        ]
-      }
-      tree_likes: {
-        Row: {
-          created_at: string
-          id: string
-          tree_id: string
-          user_id: string
-        }
-        Insert: {
-          created_at?: string
-          id?: string
-          tree_id: string
-          user_id: string
-        }
-        Update: {
-          created_at?: string
-          id?: string
-          tree_id?: string
-          user_id?: string
-        }
-        Relationships: [
-          {
-            foreignKeyName: "tree_likes_tree_id_fkey"
-            columns: ["tree_id"]
-            isOneToOne: false
-            referencedRelation: "trees"
-            referencedColumns: ["id"]
-          },
-        ]
-      }
-      tree_visits: {
-        Row: {
-          comment: string | null
-          id: string
-          pounds_harvested: number | null
-          rating: number | null
-          tree_id: string
-          user_id: string
-          visit_date: string
-          visited_at: string
-        }
-        Insert: {
-          comment?: string | null
-          id?: string
-          pounds_harvested?: number | null
-          rating?: number | null
-          tree_id: string
-          user_id: string
-          visit_date?: string
-          visited_at?: string
-        }
-        Update: {
-          comment?: string | null
-          id?: string
-          pounds_harvested?: number | null
-          rating?: number | null
-          tree_id?: string
-          user_id?: string
-          visit_date?: string
-          visited_at?: string
-        }
-        Relationships: [
-          {
-            foreignKeyName: "tree_visits_tree_id_fkey"
-            columns: ["tree_id"]
-            isOneToOne: false
-            referencedRelation: "trees"
-            referencedColumns: ["id"]
-          },
-        ]
-      }
-      trees: {
-        Row: {
-          address: string | null
-          created_at: string
+          ai_feedback: string | null
+          ai_next_steps: string | null
+          attachment_paths: string[] | null
+          country: string | null
+          data_sources: string | null
+          day_number: number | null
           description: string | null
-          fruit_type_id: string | null
-          fuzzed_latitude: number | null
-          fuzzed_longitude: number | null
-          glean_count: number
           id: string
-          image_url: string | null
-          is_active: boolean
-          is_ripe: boolean
-          last_gleaned_at: string | null
-          latitude: number
-          longitude: number
-          owner_id: string | null
-          privacy_level: string
-          ripeness_percent: number | null
+          key_findings: string | null
+          location: string | null
+          media_url: string | null
+          phase: string
+          source_links: string[] | null
+          status: string
+          submitted_at: string
+          theme: string
+          title: string
+          type: string
           updated_at: string
+          user_id: string
         }
         Insert: {
-          address?: string | null
-          created_at?: string
+          ai_feedback?: string | null
+          ai_next_steps?: string | null
+          attachment_paths?: string[] | null
+          country?: string | null
+          data_sources?: string | null
+          day_number?: number | null
           description?: string | null
-          fruit_type_id?: string | null
-          fuzzed_latitude?: number | null
-          fuzzed_longitude?: number | null
-          glean_count?: number
           id?: string
-          image_url?: string | null
-          is_active?: boolean
-          is_ripe?: boolean
-          last_gleaned_at?: string | null
-          latitude: number
-          longitude: number
-          owner_id?: string | null
-          privacy_level?: string
-          ripeness_percent?: number | null
+          key_findings?: string | null
+          location?: string | null
+          media_url?: string | null
+          phase: string
+          source_links?: string[] | null
+          status?: string
+          submitted_at?: string
+          theme: string
+          title: string
+          type?: string
           updated_at?: string
+          user_id: string
         }
         Update: {
-          address?: string | null
-          created_at?: string
+          ai_feedback?: string | null
+          ai_next_steps?: string | null
+          attachment_paths?: string[] | null
+          country?: string | null
+          data_sources?: string | null
+          day_number?: number | null
           description?: string | null
-          fruit_type_id?: string | null
-          fuzzed_latitude?: number | null
-          fuzzed_longitude?: number | null
-          glean_count?: number
           id?: string
-          image_url?: string | null
-          is_active?: boolean
-          is_ripe?: boolean
-          last_gleaned_at?: string | null
-          latitude?: number
-          longitude?: number
-          owner_id?: string | null
-          privacy_level?: string
-          ripeness_percent?: number | null
+          key_findings?: string | null
+          location?: string | null
+          media_url?: string | null
+          phase?: string
+          source_links?: string[] | null
+          status?: string
+          submitted_at?: string
+          theme?: string
+          title?: string
+          type?: string
           updated_at?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
+      user_achievements: {
+        Row: {
+          code: string
+          unlocked_at: string
+          user_id: string
+        }
+        Insert: {
+          code: string
+          unlocked_at?: string
+          user_id: string
+        }
+        Update: {
+          code?: string
+          unlocked_at?: string
+          user_id?: string
         }
         Relationships: [
           {
-            foreignKeyName: "trees_fruit_type_id_fkey"
-            columns: ["fruit_type_id"]
+            foreignKeyName: "user_achievements_code_fkey"
+            columns: ["code"]
             isOneToOne: false
-            referencedRelation: "fruit_types"
-            referencedColumns: ["id"]
+            referencedRelation: "achievements"
+            referencedColumns: ["code"]
           },
         ]
+      }
+      user_roles: {
+        Row: {
+          created_at: string
+          id: string
+          role: Database["public"]["Enums"]["app_role"]
+          user_id: string
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          role: Database["public"]["Enums"]["app_role"]
+          user_id: string
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          role?: Database["public"]["Enums"]["app_role"]
+          user_id?: string
+        }
+        Relationships: []
       }
     }
     Views: {
       [_ in never]: never
     }
     Functions: {
-      [_ in never]: never
+      country_leaderboard: {
+        Args: never
+        Returns: {
+          country: string
+          participants: number
+          rank: number
+          total_points: number
+        }[]
+      }
+      has_role: {
+        Args: {
+          _role: Database["public"]["Enums"]["app_role"]
+          _user_id: string
+        }
+        Returns: boolean
+      }
+      individual_leaderboard: {
+        Args: { _limit?: number; _offset?: number }
+        Returns: {
+          country: string
+          full_name: string
+          id: string
+          participant_number: string
+          points: number
+          rank: number
+        }[]
+      }
+      user_rank: { Args: { _user_id: string }; Returns: number }
     }
     Enums: {
-      [_ in never]: never
+      app_role: "admin" | "student"
     }
     CompositeTypes: {
       [_ in never]: never
@@ -541,6 +445,8 @@ export type CompositeTypes<
 
 export const Constants = {
   public: {
-    Enums: {},
+    Enums: {
+      app_role: ["admin", "student"],
+    },
   },
 } as const

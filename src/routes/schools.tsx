@@ -19,7 +19,7 @@ function Schools() {
         </p>
         <div className="mt-10 grid gap-5 md:grid-cols-3">
           {[
-            { i: BookOpen, t: "Lesson plans", d: "60 days of plug-and-play 45-minute modules." },
+            { i: BookOpen, t: "Lesson plans", d: "30 days of plug-and-play 45-minute modules." },
             { i: Users, t: "Class dashboard", d: "Track every student's points, streaks, and submissions." },
             { i: GraduationCap, t: "Certified hours", d: "Co-curricular credit and service-learning hours available." },
           ].map(({ i: Icon, t, d }) => (
