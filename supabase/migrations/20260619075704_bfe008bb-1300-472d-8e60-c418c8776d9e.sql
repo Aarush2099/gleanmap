@@ -1,1 +1,0 @@
-ALTER TYPE public.country_challenge_status ADD VALUE IF NOT EXISTS 'approved';
