@@ -98,7 +98,7 @@ function ChallengesPage() {
     <Layout>
       <section className="container-pgc py-12">
         <p className="eyebrow">// Challenges & Research</p>
-        <h1 className="mt-2 text-4xl md:text-5xl font-bold tracking-tight">Two halves of one program.</h1>
+        <h1 className="mt-2 text-4xl md:text-5xl font-bold tracking-tight">30 days of research. 30 days of action.</h1>
         <p className="mt-3 max-w-2xl text-muted-foreground">
           <b>October — Research:</b> each day, see the theme and document how it shows up in your region.
           <br />
