@@ -1,0 +1,6 @@
+
+DELETE FROM public.user_achievements;
+DELETE FROM public.submissions;
+DELETE FROM public.user_roles;
+DELETE FROM public.profiles;
+DELETE FROM auth.users;
