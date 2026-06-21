@@ -1,60 +1,75 @@
-Scoped extension — does not touch the public PGC AI chatbot. Builds on existing auth, profiles, `submissions`, `submission_links`, admin dashboard, and storage bucket.
+# PGC polish pass — data, flags, achievements, glass, design system
 
-## Part 1 — Themes in a config table (swappable year-over-year)
+A lot of the groundwork already landed in the last migration (points trigger, `individual_leaderboard` / `user_rank` / `country_leaderboard` RPCs, `apply_submission_points`, `maybe_unlock_achievements`, `submissions` storage bucket). This pass closes the loop: real UI on top of that data, flags everywhere, a proper achievement starter set with celebration, layered-glass redesign, and a small shared design system.
 
-New table `public.program_themes`:
-- `year int` (default 2026), `day_number int 1..30`, `theme text`, `prompt text` (one-line October research prompt), `is_rest_day bool` (default false), `created_at`. PK `(year, day_number)`.
-- GRANT SELECT to `anon, authenticated`; GRANT ALL to `service_role`. RLS on, single policy: `SELECT` for all (it's public reference data). Writes only via migration/service role.
-- Seed 2026 with the real 30-day list:
-  1 Why · 2 Footprint · 3 Cities · 4 Food · 5 Water · 6 Fashion · 7 Waste · 8 Oceans · 9 Climate Justice · 10 Holiday (rest) · 11 Forests · 12 Outdoors · 13 Indigenous Peoples · 14 Body · 15 Soil · 16 Holiday (rest) · 17 Food Waste · 18 Wellness · 19 Connect · 20 Plant-Based · 21 Fair Trade · 22 Nature · 23 Purpose · 24 Energy · 25 Advocate · 26 Holiday (rest) · 27 Commitment · 28 Activate · 29 Reflect · 30 Inspire.
-- Days 10/16/26 default to optional rest days (no research topic) per the note.
-- Delete `src/lib/pgc-themes.ts` and replace consumers with a `getThemes(year)` server fn / cached client read.
+## 1. Real leaderboard (no mock data)
 
-November Day N reuses October Day N's row — no second theme list anywhere.
+- Rewrite `src/routes/leaderboard.tsx`:
+  - Two tabs: **Individuals** and **Countries**, driven by the existing `individual_leaderboard(_limit, _offset)` and `country_leaderboard()` RPCs (already in DB).
+  - Pagination at 25/page, prev/next.
+  - Individuals row: rank · flag · avatar/initials · name · country · points.
+  - Logged-in user pinned at the bottom with their real rank from `user_rank(uid)` ("You — ranked #482"), even when outside the visible page.
+  - Tie-break is already in the RPC: points DESC → earliest `first_submission_at` → earliest `created_at`.
+  - Loading skeleton rows while fetching.
+- Delete dead imports of `universities` from `src/lib/challenges.ts`; remove the "prototype review" disclaimer and all hardcoded scores.
 
-## Part 2 — November "challenge not ready yet" state (no hard lock)
+## 2. Flags wherever country appears
 
-New table `public.country_challenges`:
-- `year`, `country` (ISO), `day_number`, `theme` (denormalized), `status` enum `pending | generating | ready | failed`, `prompt text`, `summary text`, `source_research_ids uuid[]`, `generated_at`, `created_at`, `updated_at`. PK `(year, country, day_number)`.
-- GRANT SELECT to `authenticated`; ALL to `service_role`. RLS: any authenticated user may SELECT their own country's row; only admins (via `has_role`) may INSERT/UPDATE.
-- Index on `(year, country, day_number)`.
+- Add `src/lib/country-codes.ts` mapping the full name list in `src/lib/countries.ts` → ISO‑2 codes, plus a `<Flag code>` component that renders the emoji flag (`🇮🇳` etc.) with a small SVG fallback via `https://flagcdn.com/{code}.svg` for unsupported platforms.
+- Use it in:
+  - signup country picker (auth route) and profile country select — show flag next to current value
+  - Climate Passport cover (already flag-driven; standardise on the helper)
+  - both leaderboard tabs
+  - admin submissions table country column
+  - admin Country Challenges (Part 2) review list
 
-UI: On November day cards, if no row or `status != 'ready'` → render a "Your country's November challenge is being prepared" panel (with theme + a short explainer) instead of the current lock. If `ready` → show `prompt` + `summary`, then the existing Action submission form (linked back to October research as today).
+## 3. Achievements starter set + unlock celebration
 
-AI generation itself (server fn that aggregates October submissions per country/day and writes `country_challenges`) is scaffolded as `generateCountryChallenge({ year, country, day })`, admin-only, callable from the admin dashboard. Bulk "generate for all countries with research" button. Uses existing `ai-gateway.server.ts` + Gemini with strict JSON. (No auto-cron this round — admin-triggered.)
+- Migration: seed `achievements` with the 7-badge starter set (codes + title + description + icon name + criteria text):
+  - `first_audit`, `field_researcher`, `streak_keeper` (relax to 3+ consecutive, today's trigger is 5), `october_complete`, `changemaker`, `top_10`, `trailblazer`.
+- Update `maybe_unlock_achievements()` to use the 3-day streak threshold and to grant `top_10` when the user's `user_rank()` ≤ 10 after a submission.
+- Client: subscribe to realtime inserts on `user_achievements` for the current user. On insert, show a `<AchievementToast />` with a confetti burst (no extra dep — small canvas component) and a "View on passport" CTA. Respect `prefers-reduced-motion`.
+- Climate Passport: render unlocked achievements as visa stickers (already scaffolded); locked ones shown faded with criteria.
 
-## Part 3 — Simplified October flow (Regional Audit only)
+## 4. Layered glass + readable scrim (real WCAG check)
 
-Rewrite `/challenges` Research tab card to be exactly:
-- Header: `Day N · {theme}` + one-line `prompt` from `program_themes`.
-- Rest days (10/16/26): show "Rest day — no submission required" and no form.
-- Form fields (replace current title/description/file): `location` (city/region text, prefilled from profile country), `key_findings` (textarea, required), `data_sources` (textarea), `source_links` (repeatable URL inputs), `attachments` (multi-file upload to `submissions` bucket).
-- Remove tiers/points/social-post/PDF-naming rules — none of those existed in our build, just don't add them.
-- On submit: insert into `submissions` with `phase='october_research'`, `day_number`, `theme`, plus new columns; on success show a clean structured summary card of what was just submitted (location, findings preview, sources, file count) with "Edit" / "Submit another for this day".
+- Rework `glass-card` / `glass-panel` in `src/styles.css`:
+  - background blur 24px + saturate
+  - diagonal specular highlight via a `::before` linear gradient (≈18° sheen)
+  - soft inner border glow via `box-shadow: inset 0 0 0 1px rgba(255,255,255,.55), inset 0 1px 0 rgba(255,255,255,.7)`
+  - faint outer depth shadow
+  - a separate `.scrim` utility (semi-opaque solid layer behind text) so text contrast is independent of glass opacity
+- Run a contrast script (`bun run scripts/check-contrast.ts`) that resolves the computed token pairs (foreground over scrim-on-background) and asserts ≥ 4.5:1 for body and ≥ 3:1 for large headings. Fail loud if a pair regresses.
+- Motion: add `@keyframes sheen` (slow 12s loop on the specular highlight) and `@keyframes drift` (already there as `pgc-drift`); both wrapped in `@media (prefers-reduced-motion: no-preference)`.
+- Smooth route transitions via a small `<RouteFade>` wrapper around `<Outlet />` in `__root.tsx` (opacity+translateY, 200ms, reduced-motion safe).
 
-Schema additions to `public.submissions` (additive, nullable):
-- `location text`, `key_findings text`, `data_sources text`, `source_links text[]`, `attachment_paths text[]`.
-- Keep existing `title/description/media_url` for backward-compat with November Action (which still uses title/description). October writes leave `title` = `"{theme} — Day {N}"` auto-generated for admin readability.
+## 5. Shared design tokens + one Card component
 
-November Action card: unchanged structure, but reads theme from `program_themes` and shows the Part 2 "preparing" / `ready` state above the form.
+- Tokens already live in `src/styles.css` (radius, font, color). Add a small spacing scale (`--space-1..8`), elevation tokens (`--shadow-1/2/3`), and a type scale (`--text-xs..3xl`) — all under `@theme`.
+- New `src/components/ui/pgc-card.tsx`: a single layered-glass card (`<PgcCard variant="glass" | "scrim" | "flat" />`) used on Home, Hub, Challenges, Passport, Admin, Leaderboard. Replace ad-hoc `glass-card`/`doodle-card` JSX with it page-by-page.
+- Admin shell parity: wrap `/admin` in the same `<Layout>` (header + footer) used elsewhere.
+- Skeletons: add `<LeaderboardSkeleton>`, `<AdminTableSkeleton>`, `<HubSkeleton>` (built on shadcn `<Skeleton>`) and use them in those three routes instead of blank flashes.
 
-## Part 4 — Admin dashboard additions
+## 6. (Lower priority — same pass, smaller scope)
 
-- New "Country Challenges" tab listing `country_challenges` rows with filters by country/day/status.
-- Per-row "Generate" button → `generateCountryChallenge`. Bulk action per country.
-- Existing per-submission "Generate AI Feedback" stays untouched.
+- **Live activity feed**: small `<ActivityTicker>` on the Hub, realtime-subscribed to `submissions` inserts, shows "🇮🇳 Aarav submitted Day 4 · Air Quality" rolling list (last 10).
+- **World map**: `src/components/WorldMap.tsx` — a lightweight SVG world (no Mapbox dep) shaded by per-country submission count from `country_leaderboard()`, on the Hub.
+- **Accessibility pass**: alt text on every image, `aria-label` on icon-only buttons, focus-visible rings on all interactive elements, `h-dvh` instead of `h-screen` where used, single `<main>` per route.
 
-## Out of scope
+---
 
-- The public PGC AI chatbot (untouched).
-- Real cron / scheduled November generation.
-- Migrating any existing test submissions to the new columns (additive nullable, old rows still render).
+## Technical notes (non-user)
 
-## Technical notes
+- DB migration this pass: seed `achievements` rows; update `maybe_unlock_achievements` (3-day streak, top_10 grant via `user_rank`). No new tables.
+- All leaderboard fetches go through the existing SECURITY DEFINER RPCs — no client-side ranking math.
+- Realtime: enable `supabase_realtime` publication on `user_achievements` and `submissions` (one migration line each).
+- Glass rework is CSS-only in `src/styles.css` — no per-component edits required for the visual change; the `<PgcCard>` consolidation is a refactor done route-by-route in this pass.
+- Contrast check is a build-time node script (`culori` or a 30-line WCAG helper) — no runtime cost.
 
-- Migrations in one batch: create `program_themes`, seed 2026, create `country_challenges`, add new columns to `submissions`. All with GRANTs + RLS in same migration.
-- Server fns in `src/lib/themes.functions.ts`, `src/lib/country-challenges.functions.ts`. Admin-only fns use `requireSupabaseAuth` + `has_role('admin')`.
-- Themes fetched once on `/challenges` mount via TanStack Query; cached.
-- Delete `src/lib/pgc-themes.ts` after consumers are migrated.
+## Out of scope this pass
 
-Proceeding will take ~2 batches: (1) migration, (2) code (server fns + Challenges rewrite + admin tab). Confirm to proceed.
+- Mapbox integration (you parked it earlier; the world map above is an inline SVG, not Mapbox).
+- Rewriting any server function signatures.
+- Translations beyond strings already in `i18n.tsx`.
+
+Approve and I'll execute in this order: migration → glass+tokens+Card → leaderboard → flags helper rolled across pages → achievements toast + passport stickers → skeletons & admin shell → activity feed + world map → a11y sweep.

@@ -5,7 +5,7 @@ export const Route = createFileRoute("/about")({
   head: () => ({
     meta: [
       { title: "About — Project Green Challenge 2026" },
-      { name: "description", content: "Project Green Challenge is the flagship 60-day environmental immersion by Turning Green." },
+      { name: "description", content: "Project Green Challenge is the flagship 30+30-day environmental immersion by Turning Green." },
     ],
   }),
   component: About,
@@ -18,7 +18,7 @@ function About() {
         <p className="text-xs font-bold uppercase tracking-[0.2em] text-primary-dark">About</p>
         <h1 className="mt-3 text-5xl font-black">Conscious. Conscientious. Active.</h1>
         <p className="mt-5 text-lg text-muted-foreground">
-          Project Green Challenge (PGC) is Turning Green's flagship 60-day environmental immersion
+          Project Green Challenge (PGC) is Turning Green's flagship 30+30-day environmental immersion
           designed to engage, educate, inspire and mobilize high school and college students from
           every corner of the world.
         </p>

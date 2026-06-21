@@ -15,7 +15,7 @@ const SECTIONS: { title: string; items: { q: string; a: string }[] }[] = [
   {
     title: "About the Challenge",
     items: [
-      { q: "What is PGC 2026?", a: "A free 60-day climate leadership program for students worldwide. October is research; November is action." },
+      { q: "What is PGC 2026?", a: "A free 30+30-day climate leadership program for students worldwide. October is research; November is action." },
       { q: "Who runs it?", a: "Turning Green, a nonprofit that has educated youth on planet and people since 2005." },
     ],
   },

@@ -53,26 +53,12 @@ async function assertAdmin(context: Ctx) {
 }
 
 async function logAction(
-  ctx: Ctx,
-  action: string,
-  target: { year: number; country: string; day: number; theme?: string | null },
-  metadata: Record<string, unknown> = {},
+  _ctx: Ctx,
+  _action: string,
+  _target: { year: number; country: string; day: number; theme?: string | null },
+  _metadata: Record<string, unknown> = {},
 ) {
-  try {
-    await ctx.supabase.from("admin_actions").insert({
-      actor_id: ctx.userId,
-      actor_email: ctx.claims?.email ?? null,
-      action,
-      target_type: "country_challenge",
-      target_country: target.country,
-      target_day_number: target.day,
-      target_theme: target.theme ?? null,
-      target_year: target.year,
-      metadata,
-    });
-  } catch {
-    // best-effort audit; do not block the operation
-  }
+  // Audit log table not present in current schema — no-op.
 }
 
 export const generateCountryChallenge = createServerFn({ method: "POST" })
@@ -176,7 +162,6 @@ ${anonymizedBlock || "(no submissions for this country/theme)"}`;
           small_sample: smallSample,
           generated_at: new Date().toISOString(),
           approved_at: null,
-          approved_by: null,
         })
         .eq("year", data.year).eq("country", data.country).eq("day_number", data.day);
       if (updErr) throw updErr;
@@ -216,7 +201,6 @@ export const approveCountryChallenge = createServerFn({ method: "POST" })
       .update({
         status: "approved",
         approved_at: new Date().toISOString(),
-        approved_by: context.userId,
       })
       .eq("year", data.year).eq("country", data.country).eq("day_number", data.day);
     if (error) throw error;
@@ -240,7 +224,6 @@ export const editCountryChallenge = createServerFn({ method: "POST" })
     // Editing invalidates approval — admin must re-approve to publish to students
     patch.status = "ready";
     patch.approved_at = null;
-    patch.approved_by = null;
 
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
     const { data: row, error } = await (context.supabase as any)
