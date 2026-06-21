@@ -32,18 +32,17 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   async function loadProfile(uid: string) {
     const { data } = await supabase
       .from("profiles")
-      .select("id,email,full_name,country,school,role")
+      .select("id,email,full_name,country,school")
       .eq("id", uid)
       .maybeSingle();
     if (!data) { setProfile(null); return; }
-    setProfile({
-      id: data.id,
-      email: data.email,
-      full_name: data.full_name,
-      country: data.country,
-      school: data.school,
-      role: (data.role as "student" | "admin") || "student",
-    });
+    const { data: roleRow } = await supabase
+      .from("user_roles")
+      .select("role")
+      .eq("user_id", uid)
+      .eq("role", "admin")
+      .maybeSingle();
+    setProfile({ ...(data as Omit<Profile, "role">), role: roleRow ? "admin" : "student" });
   }
 
   async function refresh() {

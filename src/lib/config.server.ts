@@ -16,51 +16,11 @@ import process from "node:process";
 //     and server (analytics IDs, public URLs). Define in .env with the
 //     VITE_ prefix. Never put secrets here — they ship to the browser.
 
-// Required environment variables for server operation
-const REQUIRED_SERVER_ENV_VARS = [
-  'SUPABASE_URL',
-  'SUPABASE_PROJECT_ID',
-  'SUPABASE_SERVICE_ROLE_KEY',
-  'LOVABLE_API_KEY',
-];
-
-/**
- * Validate that all required environment variables are set.
- * Call this during server startup to fail fast if config is missing.
- */
-export function validateServerConfig() {
-  const missing = REQUIRED_SERVER_ENV_VARS.filter(
-    (key) => !process.env[key]
-  );
-
-  if (missing.length > 0) {
-    const message = `Missing required environment variables: ${missing.join(', ')}. ` +
-      `Copy .env.example to .env.local and fill in the values.`;
-    console.error(`[Config Error] ${message}`);
-    throw new Error(message);
-  }
-}
-
 export function getServerConfig() {
   return {
-    nodeEnv: process.env.NODE_ENV || 'development',
-    supabaseUrl: process.env.SUPABASE_URL,
-    supabaseProjectId: process.env.SUPABASE_PROJECT_ID,
-    supabaseServiceRoleKey: process.env.SUPABASE_SERVICE_ROLE_KEY,
-    lovableApiKey: process.env.LOVABLE_API_KEY,
-    adminEmails: (process.env.ADMIN_EMAILS || '').split(',').map(e => e.trim()).filter(Boolean),
-    featureAdminPanel: process.env.FEATURE_ADMIN_PANEL !== 'false',
+    nodeEnv: process.env.NODE_ENV,
+    // Add server-only values here, e.g.:
+    //   databaseUrl: process.env.DATABASE_URL,
+    //   stripeSecretKey: process.env.STRIPE_SECRET_KEY,
   };
-}
-
-/**
- * Get a single required environment variable, with graceful error.
- * Use this for one-off env reads in handlers.
- */
-export function getRequiredEnv(key: string): string {
-  const value = process.env[key];
-  if (!value) {
-    throw new Error(`Required environment variable not set: ${key}`);
-  }
-  return value;
 }

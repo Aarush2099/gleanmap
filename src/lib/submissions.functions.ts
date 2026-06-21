@@ -1,7 +1,6 @@
 import { createServerFn } from "@tanstack/react-start";
 import { requireSupabaseAuth } from "@/integrations/supabase/auth-middleware";
 import { z } from "zod";
-import { getRequiredEnv } from "./config.server";
 
 const InputSchema = z.object({ submissionId: z.string().uuid() });
 
@@ -27,7 +26,8 @@ export const generateAiFeedback = createServerFn({ method: "POST" })
       .maybeSingle();
     if (error || !sub) throw new Error("Submission not found");
 
-    const apiKey = getRequiredEnv("LOVABLE_API_KEY");
+    const apiKey = process.env.LOVABLE_API_KEY;
+    if (!apiKey) throw new Error("LOVABLE_API_KEY not configured");
 
     const { createLovableAiGateway } = await import("./ai-gateway.server");
     const { generateText, Output } = await import("ai");

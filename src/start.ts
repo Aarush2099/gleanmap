@@ -2,10 +2,6 @@ import { createStart, createMiddleware } from "@tanstack/react-start";
 
 import { renderErrorPage } from "./lib/error-page";
 import { attachSupabaseAuth } from "@/integrations/supabase/auth-attacher";
-import { validateServerConfig } from "./lib/config.server";
-
-// Validate required environment variables on startup
-validateServerConfig();
 
 const errorMiddleware = createMiddleware().server(async ({ next }) => {
   try {

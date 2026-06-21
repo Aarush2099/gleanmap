@@ -1,7 +1,6 @@
 import { createServerFn } from "@tanstack/react-start";
 import { requireSupabaseAuth } from "@/integrations/supabase/auth-middleware";
 import { z } from "zod";
-import { getRequiredEnv } from "./config.server";
 
 const GenInput = z.object({
   year: z.number().int().default(2026),
@@ -108,7 +107,8 @@ export const generateCountryChallenge = createServerFn({ method: "POST" })
       submission_count: submissionCount, small_sample: smallSample,
     }, { onConflict: "year,country,day_number" });
 
-    const apiKey = getRequiredEnv("LOVABLE_API_KEY");
+    const apiKey = process.env.LOVABLE_API_KEY;
+    if (!apiKey) throw new Error("LOVABLE_API_KEY not configured");
     const { createLovableAiGateway } = await import("./ai-gateway.server");
     const { generateText, Output } = await import("ai");
     const gateway = createLovableAiGateway(apiKey);
