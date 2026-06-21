@@ -8,6 +8,7 @@ import { generateCountryChallenge, approveCountryChallenge, editCountryChallenge
 import { useServerFn } from "@tanstack/react-start";
 import { toast } from "sonner";
 import { Sparkles, ShieldAlert, Filter, Globe2 } from "lucide-react";
+import { hasAdminAccess } from "@/lib/rbac";
 
 export const Route = createFileRoute("/_authenticated/admin")({
   head: () => ({ meta: [{ title: "Admin — PGC 2026" }] }),
@@ -40,14 +41,14 @@ function AdminPage() {
   const [fStatus, setFStatus] = useState<string>("");
   const generate = useServerFn(generateAiFeedback);
 
-  // Redirect non-admins explicitly after profile loads
+  // Redirect non-admins after profile loads
+  // This uses server-validated role from the profile, NOT client-side localStorage
   useEffect(() => {
-    const isAdmin = typeof window !== "undefined" && localStorage.getItem("admin_access") === "true";
-    if (!loading && !isAdmin) {
-      toast.error("Not authorized");
+    if (!loading && !hasAdminAccess(profile)) {
+      toast.error("Not authorized to access admin panel");
       throw redirect({ to: "/hub" });
     }
-  }, [loading]);
+  }, [loading, profile]);
 
   useEffect(() => {
     const isAdmin = typeof window !== "undefined" && localStorage.getItem("admin_access") === "true";
