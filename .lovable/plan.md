@@ -1,73 +1,75 @@
-# What's actually wrong
+# PGC polish pass — data, flags, achievements, glass, design system
 
-The site has two layers that don't match each other:
+A lot of the groundwork already landed in the last migration (points trigger, `individual_leaderboard` / `user_rank` / `country_leaderboard` RPCs, `apply_submission_points`, `maybe_unlock_achievements`, `submissions` storage bucket). This pass closes the loop: real UI on top of that data, flags everywhere, a proper achievement starter set with celebration, layered-glass redesign, and a small shared design system.
 
-- **Database**: still the old GleanMap tables (`trees`, `fruit_types`, `messages`, `reservations`, `tree_*`, plus a `profiles` table with `gleaner_score`/`pounds_saved`/`badges`). No `submissions`, no `program_themes`, no `country_challenges`, no `admin_emails`, no `role` column.
-- **App code**: PGC 2026 — reads `submissions`, `program_themes`, `country_challenges`, `profiles.role`, etc.
+## 1. Real leaderboard (no mock data)
 
-Result: every authenticated page silently fails, admin can never be granted, and your bug ("admin can't log in to /admin") is just the most visible symptom. There is no `admin_emails` table to fix — we need to build the real schema.
+- Rewrite `src/routes/leaderboard.tsx`:
+  - Two tabs: **Individuals** and **Countries**, driven by the existing `individual_leaderboard(_limit, _offset)` and `country_leaderboard()` RPCs (already in DB).
+  - Pagination at 25/page, prev/next.
+  - Individuals row: rank · flag · avatar/initials · name · country · points.
+  - Logged-in user pinned at the bottom with their real rank from `user_rank(uid)` ("You — ranked #482"), even when outside the visible page.
+  - Tie-break is already in the RPC: points DESC → earliest `first_submission_at` → earliest `created_at`.
+  - Loading skeleton rows while fetching.
+- Delete dead imports of `universities` from `src/lib/challenges.ts`; remove the "prototype review" disclaimer and all hardcoded scores.
 
-I'll do this in 3 batches so each one is reviewable.
+## 2. Flags wherever country appears
+
+- Add `src/lib/country-codes.ts` mapping the full name list in `src/lib/countries.ts` → ISO‑2 codes, plus a `<Flag code>` component that renders the emoji flag (`🇮🇳` etc.) with a small SVG fallback via `https://flagcdn.com/{code}.svg` for unsupported platforms.
+- Use it in:
+  - signup country picker (auth route) and profile country select — show flag next to current value
+  - Climate Passport cover (already flag-driven; standardise on the helper)
+  - both leaderboard tabs
+  - admin submissions table country column
+  - admin Country Challenges (Part 2) review list
+
+## 3. Achievements starter set + unlock celebration
+
+- Migration: seed `achievements` with the 7-badge starter set (codes + title + description + icon name + criteria text):
+  - `first_audit`, `field_researcher`, `streak_keeper` (relax to 3+ consecutive, today's trigger is 5), `october_complete`, `changemaker`, `top_10`, `trailblazer`.
+- Update `maybe_unlock_achievements()` to use the 3-day streak threshold and to grant `top_10` when the user's `user_rank()` ≤ 10 after a submission.
+- Client: subscribe to realtime inserts on `user_achievements` for the current user. On insert, show a `<AchievementToast />` with a confetti burst (no extra dep — small canvas component) and a "View on passport" CTA. Respect `prefers-reduced-motion`.
+- Climate Passport: render unlocked achievements as visa stickers (already scaffolded); locked ones shown faded with criteria.
+
+## 4. Layered glass + readable scrim (real WCAG check)
+
+- Rework `glass-card` / `glass-panel` in `src/styles.css`:
+  - background blur 24px + saturate
+  - diagonal specular highlight via a `::before` linear gradient (≈18° sheen)
+  - soft inner border glow via `box-shadow: inset 0 0 0 1px rgba(255,255,255,.55), inset 0 1px 0 rgba(255,255,255,.7)`
+  - faint outer depth shadow
+  - a separate `.scrim` utility (semi-opaque solid layer behind text) so text contrast is independent of glass opacity
+- Run a contrast script (`bun run scripts/check-contrast.ts`) that resolves the computed token pairs (foreground over scrim-on-background) and asserts ≥ 4.5:1 for body and ≥ 3:1 for large headings. Fail loud if a pair regresses.
+- Motion: add `@keyframes sheen` (slow 12s loop on the specular highlight) and `@keyframes drift` (already there as `pgc-drift`); both wrapped in `@media (prefers-reduced-motion: no-preference)`.
+- Smooth route transitions via a small `<RouteFade>` wrapper around `<Outlet />` in `__root.tsx` (opacity+translateY, 200ms, reduced-motion safe).
+
+## 5. Shared design tokens + one Card component
+
+- Tokens already live in `src/styles.css` (radius, font, color). Add a small spacing scale (`--space-1..8`), elevation tokens (`--shadow-1/2/3`), and a type scale (`--text-xs..3xl`) — all under `@theme`.
+- New `src/components/ui/pgc-card.tsx`: a single layered-glass card (`<PgcCard variant="glass" | "scrim" | "flat" />`) used on Home, Hub, Challenges, Passport, Admin, Leaderboard. Replace ad-hoc `glass-card`/`doodle-card` JSX with it page-by-page.
+- Admin shell parity: wrap `/admin` in the same `<Layout>` (header + footer) used elsewhere.
+- Skeletons: add `<LeaderboardSkeleton>`, `<AdminTableSkeleton>`, `<HubSkeleton>` (built on shadcn `<Skeleton>`) and use them in those three routes instead of blank flashes.
+
+## 6. (Lower priority — same pass, smaller scope)
+
+- **Live activity feed**: small `<ActivityTicker>` on the Hub, realtime-subscribed to `submissions` inserts, shows "🇮🇳 Aarav submitted Day 4 · Air Quality" rolling list (last 10).
+- **World map**: `src/components/WorldMap.tsx` — a lightweight SVG world (no Mapbox dep) shaded by per-country submission count from `country_leaderboard()`, on the Hub.
+- **Accessibility pass**: alt text on every image, `aria-label` on icon-only buttons, focus-visible rings on all interactive elements, `h-dvh` instead of `h-screen` where used, single `<main>` per route.
 
 ---
 
-## Batch 1 — Database reset + admin grant (migration, needs your approval)
+## Technical notes (non-user)
 
-Single migration that:
+- DB migration this pass: seed `achievements` rows; update `maybe_unlock_achievements` (3-day streak, top_10 grant via `user_rank`). No new tables.
+- All leaderboard fetches go through the existing SECURITY DEFINER RPCs — no client-side ranking math.
+- Realtime: enable `supabase_realtime` publication on `user_achievements` and `submissions` (one migration line each).
+- Glass rework is CSS-only in `src/styles.css` — no per-component edits required for the visual change; the `<PgcCard>` consolidation is a refactor done route-by-route in this pass.
+- Contrast check is a build-time node script (`culori` or a 30-line WCAG helper) — no runtime cost.
 
-1. **Drops GleanMap tables** (`trees`, `tree_likes`, `tree_comments`, `tree_visits`, `reservations`, `messages`, `notifications`, `fruit_types`) and rebuilds `profiles` with the PGC shape (`id`=auth user id, `email`, `full_name`, `country`, `school`, `created_at`, `points int default 0`, `participant_number text`).
-2. **Roles done right** (no `admin_emails`): `app_role` enum + `user_roles` table + `has_role(user, role)` security-definer function. This is the pattern we already standardize on. `profiles.role` view-helper column is dropped; the app reads roles via `has_role`.
-3. **Creates the PGC tables** with full GRANTs + RLS + policies, in order:
-   - `program_themes(year, day_number, theme, prompt, is_rest_day)` — seeded with the real 30 themes (Why, Footprint, Cities, Food, Water, Fashion, Waste, Oceans, Climate Justice, Holiday, Forests, Outdoors, Indigenous Peoples, Body, Soil, Holiday, Food Waste, Wellness, Connect, Plant-Based, Fair Trade, Nature, Purpose, Energy, Advocate, Holiday, Commitment, Activate, Reflect, Inspire). Days 10/16/26 marked `is_rest_day`.
-   - `submissions(user_id, country, phase, day_number, theme, location, key_findings, data_sources, source_links[], attachment_paths[], ai_feedback, ai_next_steps, status, submitted_at)` with points trigger.
-   - `country_challenges(year, country, day_number, theme, status, prompt, summary, title, brief, action_prompt, success_criteria, ...)` — November per-country.
-   - `achievements(code, name, description, icon)` + `user_achievements(user_id, code, unlocked_at)` — seeded with First Audit, Field Researcher, Streak Keeper, October Complete, Changemaker, Top 10, Trailblazer.
-4. **Points trigger** on `submissions` insert: +100 october_research, +50 november_action; on `submissions` update when `status` becomes `reviewed`: +25.
-5. **Triggers**: handle_new_user replaces the GleanMap version (creates a PGC profile row, generates a 6-char participant number, copies country from `raw_user_meta_data`). Auto-unlock achievement rows when criteria met (First Audit, Field Researcher = 5 audits, Streak Keeper = 5-day streak, October Complete = 27/27 non-rest days).
-6. **Storage**: drop `tree-images` bucket, create private `submissions` bucket with per-user RLS.
-7. **Grant admin to `aarushmahajan2008@gmail.com`**: insert into `user_roles` for that auth user id (looked up by email in `auth.users`). If the user hasn't signed up yet, the migration creates a one-shot trigger so the role is granted on first signup with that exact email.
+## Out of scope this pass
 
-After this migration runs, /admin works for that one email and is blocked for everyone else.
+- Mapbox integration (you parked it earlier; the world map above is an inline SVG, not Mapbox).
+- Rewriting any server function signatures.
+- Translations beyond strings already in `i18n.tsx`.
 
-## Batch 2 — Code cleanup + 30-day truth + Hub/nav fixes
-
-Pure code edits, no DB. After Batch 1's regenerated `types.ts` lands:
-
-- `useAuth` reads role via `has_role` RPC, exposes `isAdmin`. `/admin` uses `isAdmin` instead of `profile.role`.
-- **Purge "60 days" everywhere** — confirmed locations: `src/lib/i18n.tsx` (5 strings), `src/routes/about.tsx`, `src/routes/faq.tsx`, `src/routes/schools.tsx`, `src/routes/__root.tsx`, `src/lib/api/pgc-ai.functions.ts`. Replace with "30 days of research. 30 days of action." copy you specified.
-- **Hub** (`src/routes/hub.tsx`): footer tagline → "30 days of action. One global movement." Guest preview tile rewrite to "30-Day Research" + "30-Day Action". Remove "60-Day Timeline" tile.
-- **Hub nav**: it already has the single "Challenges & Research" entry — but I'll audit a per-page secondary nav you mentioned ("October · Research" + "November · Action") and consolidate to one.
-- **`/challenges` headline**: "30 days of research. 30 days of action."
-- **Challenges form**: already the right shape (location / key findings / data sources / source_links / file upload). Verified no tier/social-post logic in code.
-- **Themes**: already config-driven via `program_themes`. Delete the dead `src/lib/challenges.ts` (the universities mock + the 60-row generator) — nothing keeps using it after the leaderboard rewrite below.
-
-## Batch 3 — Climate Passport profile + real leaderboard + nav avatar
-
-- **`/profile` rewrite** as Climate Passport (replaces current form-based profile):
-  - Passport card: country flag (emoji from ISO derived from country name), full name, participant number, join date, country name.
-  - 30-stamp grid for October days — filled stamps for completed days, dotted empty for unfilled, theme name + day number on each.
-  - Stats strip: total points, country rank (computed via RPC), current streak, X/30 complete.
-  - Achievement visa stickers — locked = greyed, unlocked = full color with unlock date.
-  - November section: per-day cards keyed off `country_challenges` (status=approved) for the user's country.
-  - **Export as Image** button using `html-to-image` (already installed).
-- **Header nav**: profile link is already there when signed in; I'll swap the text-with-name pill for a circular avatar/initials button linked to `/profile`.
-- **`/leaderboard` rewrite** (delete fake universities entirely):
-  - Tabs: **Individuals** and **Countries**.
-  - Individuals: rank by `profiles.points` desc, tiebreak by first submission date (RPC). 25/page. Pin the signed-in user's row at the bottom with their real rank ("You are ranked #482") even if outside the page.
-  - Countries: sum points by country, count participants, sort desc.
-  - Remove "prototype review" disclaimer, all hardcoded names/scores, the financial-index styling kept but powered by real data.
-
----
-
-## Out of scope (won't touch this round)
-
-- Mapbox / location features (you said "later").
-- Auth email templates / password reset flow.
-- Translating new copy into the other languages in `i18n.tsx` (English strings updated; other locales keep their existing strings until you ask).
-
-## Risks to call out
-
-- **Dropping GleanMap tables wipes any data in them.** Given you said "that project is gone," I'm assuming this is fine. If any of that data matters, say so and I'll skip the drops and leave them orphaned instead.
-- After Batch 1 you'll need to sign up (or already be signed up) with `aarushmahajan2008@gmail.com` for the admin role to attach to a real auth user. The migration handles either order.
-
-Confirm and I'll start with Batch 1 (the migration).
+Approve and I'll execute in this order: migration → glass+tokens+Card → leaderboard → flags helper rolled across pages → achievements toast + passport stickers → skeletons & admin shell → activity feed + world map → a11y sweep.
