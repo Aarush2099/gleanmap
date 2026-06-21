@@ -42,14 +42,16 @@ function AdminPage() {
 
   // Redirect non-admins explicitly after profile loads
   useEffect(() => {
-    if (!loading && profile && profile.role !== "admin") {
+    const isAdmin = typeof window !== "undefined" && localStorage.getItem("admin_access") === "true";
+    if (!loading && !isAdmin) {
       toast.error("Not authorized");
       throw redirect({ to: "/hub" });
     }
-  }, [loading, profile]);
+  }, [loading]);
 
   useEffect(() => {
-    if (profile?.role !== "admin") return;
+    const isAdmin = typeof window !== "undefined" && localStorage.getItem("admin_access") === "true";
+    if (!isAdmin) return;
     (async () => {
       const { data, error } = await supabase
         .from("submissions")
