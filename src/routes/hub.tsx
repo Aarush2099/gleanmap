@@ -5,6 +5,12 @@ import { supabase } from "@/integrations/supabase/client";
 import { useEffect, useState } from "react";
 import { ArrowRight, Microscope, Megaphone, FileDown, UserCircle2 } from "lucide-react";
 
+declare namespace JSX {
+  interface IntrinsicElements {
+    [elemName: string]: any;
+  }
+}
+
 export const Route = createFileRoute("/hub")({
   head: () => ({ meta: [
     { title: "Your Hub — PGC 2026" },
@@ -73,7 +79,7 @@ function Hub() {
         )}
 
         <div className="mt-8 grid md:grid-cols-2 gap-5">
-          <Link to="/challenges" className="glass-card p-7 group hover:translate-y-[-2px] transition">
+          <Link to="/challenges" className="glass-card p-7 group hover:-translate-y-0.5 transition">
             <Microscope className="size-7 text-primary" />
             <h3 className="mt-4 text-2xl font-bold">Go to Research</h3>
             <p className="mt-1 text-sm text-muted-foreground">October · regional audits across 30 themes.</p>
@@ -82,7 +88,7 @@ function Hub() {
             <p className="mt-4 text-sm font-semibold text-primary-dark inline-flex items-center gap-1">Open Research <ArrowRight className="size-4" /></p>
           </Link>
 
-          <Link to="/challenges" className="glass-card p-7 group hover:translate-y-[-2px] transition">
+          <Link to="/challenges" className="glass-card p-7 group hover:-translate-y-0.5 transition">
             <Megaphone className="size-7 text-primary" />
             <h3 className="mt-4 text-2xl font-bold">Go to Action</h3>
             <p className="mt-1 text-sm text-muted-foreground">November · policy-level changes informed by your research.</p>
@@ -97,7 +103,7 @@ function Hub() {
             <h2 className="text-xl font-bold">Recent activity</h2>
             <div className="mt-4 divide-y divide-border">
               {recent.length === 0 && <p className="text-sm text-muted-foreground py-3">No submissions yet — pick a theme to start.</p>}
-              {recent.map(r => (
+              {recent.map((r: Recent) => (
                 <div key={r.id} className="py-3">
                   <div className="flex items-center justify-between">
                     <p className="text-sm font-semibold">{r.theme} · {r.title}</p>

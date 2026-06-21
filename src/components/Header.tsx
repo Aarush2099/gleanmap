@@ -1,6 +1,6 @@
 import { Link, useNavigate } from "@tanstack/react-router";
 import { useEffect, useRef, useState } from "react";
-import { Menu, X, Globe, ChevronDown, LogIn, UserCircle2 } from "lucide-react";
+import { Menu, X, Globe, ChevronDown, LogIn, UserCircle2, Shield } from "lucide-react";
 import { useI18n, LANGS, type Lang } from "@/lib/i18n";
 import { useAuth } from "@/lib/auth";
 import { BrandMark } from "./BrandMark";
@@ -68,6 +68,28 @@ export function Header() {
             )}
           </div>
 
+          {profile?.role === 'admin' && (
+            <Link to="/admin"
+              className="hidden sm:inline-flex items-center gap-2 px-3 py-2 rounded-full text-xs font-semibold border transition-all"
+              style={{
+                borderColor: 'rgba(251, 191, 36, 0.4)',
+                backgroundColor: 'rgba(251, 191, 36, 0.08)',
+                color: 'rgb(251, 191, 36)'
+              }}
+              onMouseEnter={(e) => {
+                (e.currentTarget as HTMLElement).style.backgroundColor = 'rgba(251, 191, 36, 0.18)';
+                (e.currentTarget as HTMLElement).style.borderColor = 'rgba(251, 191, 36, 0.7)';
+                (e.currentTarget as HTMLElement).style.boxShadow = '0 0 12px rgba(251, 191, 36, 0.2)';
+              }}
+              onMouseLeave={(e) => {
+                (e.currentTarget as HTMLElement).style.backgroundColor = 'rgba(251, 191, 36, 0.08)';
+                (e.currentTarget as HTMLElement).style.borderColor = 'rgba(251, 191, 36, 0.4)';
+                (e.currentTarget as HTMLElement).style.boxShadow = 'none';
+              }}>
+              <Shield className="size-4" /> Admin
+            </Link>
+          )}
+
           {user ? (
             <Link to="/profile" className="hidden sm:inline-flex items-center gap-2 px-3 py-2 rounded-full text-xs font-semibold bg-white/50 border border-white/40 hover:bg-white/70">
               <UserCircle2 className="size-4" /> {profile?.full_name?.split(" ")[0] ?? "Account"}
@@ -94,6 +116,11 @@ export function Header() {
                 {n.label}
               </Link>
             ))}
+            {profile?.role === 'admin' && (
+              <Link to="/admin" onClick={() => setOpen(false)} className="py-2.5 text-sm font-semibold flex items-center gap-2" style={{ color: 'rgb(251, 191, 36)' }}>
+                <Shield className="size-4" /> Admin
+              </Link>
+            )}
             <Link to={user ? "/profile" : "/auth"} onClick={() => setOpen(false)} className="py-2.5 text-sm font-semibold text-primary-dark">
               {user ? "Profile" : "Sign in"}
             </Link>
