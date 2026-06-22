@@ -42,16 +42,14 @@ function AdminPage() {
 
   // Redirect non-admins explicitly after profile loads
   useEffect(() => {
-    const isAdmin = typeof window !== "undefined" && localStorage.getItem("admin_access") === "true";
-    if (!loading && !isAdmin) {
+    if (!loading && profile && profile.role !== "admin") {
       toast.error("Not authorized");
       throw redirect({ to: "/hub" });
     }
-  }, [loading]);
+  }, [loading, profile]);
 
   useEffect(() => {
-    const isAdmin = typeof window !== "undefined" && localStorage.getItem("admin_access") === "true";
-    if (!isAdmin) return;
+    if (!profile || profile.role !== "admin") return;
     (async () => {
       const { data, error } = await supabase
         .from("submissions")
@@ -62,6 +60,7 @@ function AdminPage() {
       else setRows((data as Row[]) ?? []);
     })();
   }, [profile]);
+
 
   const countries = useMemo(() => Array.from(new Set(rows.map(r => r.country).filter(Boolean))) as string[], [rows]);
 

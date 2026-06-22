@@ -1,75 +1,110 @@
-export type Theme =
-  | "Energy" | "Water" | "Food" | "Waste" | "Transportation"
-  | "Air & Climate" | "Biodiversity" | "Environmental Justice"
-  | "Consumption" | "Wellness" | "Action" | "Leadership";
-
-export interface Challenge {
+export interface PgcDay {
   day: number;
-  title: string;
-  theme: Theme;
-  blurb: string;
-  research: string; // October "Think" data prompt
-  action: string;   // November action prompt
+  theme: string;
+  isRestDay: boolean;
+  researchBlurb: string;
+  researchPrompt: string;
 }
 
-const themes: Theme[] = [
-  "Energy","Water","Food","Waste","Transportation","Air & Climate",
-  "Biodiversity","Environmental Justice","Consumption","Wellness","Action","Leadership"
+export const PGC_DAYS: PgcDay[] = [
+  { day: 1,  theme: "Why",               isRestDay: false,
+    researchBlurb: "Why are you here? What world do you want to help create?",
+    researchPrompt: "Document your personal 'why' for joining PGC. What local environmental or social issue motivates you most? Collect 1 photo, 1 data point, and 1 quote from someone in your community." },
+  { day: 2,  theme: "Footprint",         isRestDay: false,
+    researchBlurb: "Audit your environmental footprint across energy, water, food, and waste.",
+    researchPrompt: "Use a carbon footprint calculator to estimate your annual emissions. Document 3 key findings about your footprint in your country's context. What is the national average? How do you compare?" },
+  { day: 3,  theme: "Cities",            isRestDay: false,
+    researchBlurb: "How does your city or town handle sustainability and climate resilience?",
+    researchPrompt: "Research your city's climate action plan (or lack of one). Document green infrastructure, public transit quality, and urban heat island data for your area. Include 1 map or data visualization." },
+  { day: 4,  theme: "Food",              isRestDay: false,
+    researchBlurb: "Audit the food system in your region — from farm to table to waste.",
+    researchPrompt: "Map where your food comes from. Research local food insecurity rates, agricultural practices, and food import/export in your country. Document 3 findings with sources." },
+  { day: 5,  theme: "Water",             isRestDay: false,
+    researchBlurb: "Investigate water access, quality, and security in your region.",
+    researchPrompt: "Research water quality data for your area. Is your water source a river, aquifer, or reservoir? What are the local threats to it? Document access disparities if any exist in your country." },
+  { day: 6,  theme: "Fashion",           isRestDay: false,
+    researchBlurb: "Investigate the fashion and textile industry's impact in your region.",
+    researchPrompt: "Research where your clothes come from. Are there textile factories or garment workers in your country? Document fast fashion's environmental and labor impact in your regional context." },
+  { day: 7,  theme: "Waste",             isRestDay: false,
+    researchBlurb: "Audit waste generation, recycling infrastructure, and plastic pollution locally.",
+    researchPrompt: "Research your city or country's waste management system. What percentage is recycled vs landfilled vs burned? Document 3 findings about waste infrastructure and any local plastic pollution issues." },
+  { day: 8,  theme: "Oceans",            isRestDay: false,
+    researchBlurb: "Research ocean health, coastal ecosystems, and marine threats near you.",
+    researchPrompt: "Even if landlocked, your region connects to ocean health through rivers. Research the nearest major water body. Document pollution levels, biodiversity status, and 1 local conservation effort." },
+  { day: 9,  theme: "Climate Justice",   isRestDay: false,
+    researchBlurb: "Who is most vulnerable to climate change in your country, and why?",
+    researchPrompt: "Research which communities in your country are most impacted by climate change. Document income or geography-based environmental disparities. Include 2 data sources." },
+  { day: 10, theme: "Holiday",           isRestDay: true,
+    researchBlurb: "Rest day — reflect on your first 9 days of research.",
+    researchPrompt: "Optional: Review your research so far. What surprised you most? Write a short reflection." },
+  { day: 11, theme: "Forests",           isRestDay: false,
+    researchBlurb: "Investigate forests, deforestation, and land use in your region.",
+    researchPrompt: "Research forest cover in your country — is it growing or shrinking? Document deforestation drivers and any reforestation efforts. Include satellite data or a map if available." },
+  { day: 12, theme: "Outdoors",          isRestDay: false,
+    researchBlurb: "Explore access to green spaces, nature, and outdoor recreation in your community.",
+    researchPrompt: "Research green space access in your city. What percentage of residents live within 10 minutes of a park? Document inequities in who has access to nature and what barriers exist." },
+  { day: 13, theme: "Indigenous Peoples", isRestDay: false,
+    researchBlurb: "Research Indigenous land rights, environmental stewardship, and climate frontline stories.",
+    researchPrompt: "Research Indigenous communities in your country and their relationship to land and climate. Document environmental threats they face. Use respectful, community-led sources." },
+  { day: 14, theme: "Body",              isRestDay: false,
+    researchBlurb: "Investigate the links between environmental conditions and public health in your region.",
+    researchPrompt: "Research air quality, water quality, or chemical exposure data in your area and its health effects. Document rates of pollution-linked health issues in your community." },
+  { day: 15, theme: "Soil",              isRestDay: false,
+    researchBlurb: "Audit soil health, agriculture, and land degradation in your region.",
+    researchPrompt: "Research soil health in your country. What percentage of agricultural land is degraded? Document the connection between soil health and food security in your regional context." },
+  { day: 16, theme: "Holiday",           isRestDay: true,
+    researchBlurb: "Rest day — reconnect with your purpose and your local environment.",
+    researchPrompt: "Optional: Go outside for 20 minutes. Observe your local environment. Document what you notice that connects to your research." },
+  { day: 17, theme: "Food Waste",        isRestDay: false,
+    researchBlurb: "Research food waste at household, restaurant, and supply chain levels in your region.",
+    researchPrompt: "Research food waste statistics in your country. Document local composting infrastructure, food bank capacity, and 1 organisation working on this issue." },
+  { day: 18, theme: "Wellness",          isRestDay: false,
+    researchBlurb: "Investigate the connection between environmental quality and mental and physical wellness.",
+    researchPrompt: "Research eco-anxiety or nature-deficit disorder in your country's context. Document how environmental degradation is affecting youth mental health locally. Include 2 sources." },
+  { day: 19, theme: "Connect",           isRestDay: false,
+    researchBlurb: "Map the environmental organisations and student activists working in your region.",
+    researchPrompt: "Research who is doing environmental and climate work in your country. Document 3 organisations or activists and any campaigns currently active. How could you plug in?" },
+  { day: 20, theme: "Plant-Based",       isRestDay: false,
+    researchBlurb: "Investigate plant-based food systems, livestock impact, and diet sustainability in your region.",
+    researchPrompt: "Research meat and dairy consumption rates in your country and their environmental footprint. Document the availability and affordability of plant-based options locally." },
+  { day: 21, theme: "Fair Trade",        isRestDay: false,
+    researchBlurb: "Research supply chain ethics, fair trade certification, and worker rights in your region.",
+    researchPrompt: "Research which products your country exports or imports under exploitative conditions. Document fair trade certification penetration in your local market." },
+  { day: 22, theme: "Nature",            isRestDay: false,
+    researchBlurb: "Investigate biodiversity loss, invasive species, and ecosystem protection in your area.",
+    researchPrompt: "Research biodiversity in your country. What species are endangered? Document 1 conservation success story and 1 ongoing crisis in your region." },
+  { day: 23, theme: "Purpose",           isRestDay: false,
+    researchBlurb: "Research career pathways and economic opportunities in the green economy in your country.",
+    researchPrompt: "Research green jobs and sustainability career opportunities in your country. Document 3 career paths and the skills they require in your local context." },
+  { day: 24, theme: "Energy",            isRestDay: false,
+    researchBlurb: "Audit your region's energy mix, renewable potential, and energy access gaps.",
+    researchPrompt: "Research your country's electricity generation mix. What percentage is renewable? Document energy access disparities and 1 major renewable project underway in your region." },
+  { day: 25, theme: "Advocate",          isRestDay: false,
+    researchBlurb: "Research advocacy tactics, policy change, and student activist successes in your country.",
+    researchPrompt: "Research a successful environmental policy change in your country's recent history. Document the tactics used and identify 1 current policy gap you could target." },
+  { day: 26, theme: "Holiday",           isRestDay: true,
+    researchBlurb: "Rest day — integrate everything you have learned over the past 25 days.",
+    researchPrompt: "Optional: Create a visual summary of the 5 local issues that matter most to you based on your research." },
+  { day: 27, theme: "Commitment",        isRestDay: false,
+    researchBlurb: "Research what long-term commitment looks like in environmental advocacy and systems change.",
+    researchPrompt: "Research a long-running environmental movement in your country. Document how sustained commitment over years led to change. What keeps people going?" },
+  { day: 28, theme: "Activate",          isRestDay: false,
+    researchBlurb: "Map what it would take to activate your campus or community around the issues you have found.",
+    researchPrompt: "Research successful campus environmental campaigns in your country. Document the organising model and what could be replicated on your campus." },
+  { day: 29, theme: "Reflect",           isRestDay: false,
+    researchBlurb: "Synthesise your research into your most important findings.",
+    researchPrompt: "Review all your October submissions. Write a synthesis: What are the 3 most urgent environmental issues in your region? What will you do differently? This informs your November challenges." },
+  { day: 30, theme: "Inspire",           isRestDay: false,
+    researchBlurb: "Document your vision for a healthy, just, resilient future in your region.",
+    researchPrompt: "Create a Vision Statement for your country's environmental future. Ground it in your research. Include 1 photo, 1 quote, and 1 data point." },
 ];
 
-const titles: Record<Theme, string[]> = {
-  "Energy": ["Power Down","Grid Audit","Solar Story","Phantom Loads","Campus kWh"],
-  "Water": ["Watershed Map","Drip Detective","Bottle Boycott","Greywater 101","Source to Tap"],
-  "Food": ["Plant-Forward","Food Miles","Cafeteria Audit","Compost Census","Local Harvest"],
-  "Waste": ["Trash Audit","Recycling Reality","Refill Revolution","E-Waste Drive","Zero Packaging"],
-  "Transportation": ["Bike It","Carbon Commute","Transit Tally","EV Future","Walkability Map"],
-  "Air & Climate": ["AQI Watch","Carbon Footprint","Heat Island","Methane Map","Climate Letter"],
-  "Biodiversity": ["Pollinator Patch","Native Species","Tree Inventory","Wildlife Corridor","Seed Save"],
-  "Environmental Justice": ["Frontline Stories","Policy Scan","Equity Audit","Voices Heard","Just Transition"],
-  "Consumption": ["Closet Detox","Buy Nothing","Repair Cafe","Slow Fashion","Digital Diet"],
-  "Wellness": ["Nature Rx","Mindful Mile","Green Break","Sleep & Light","Forest Bath"],
-  "Action": ["Petition Drive","Op-Ed Pitch","Town Hall","Mutual Aid","Coalition Build"],
-  "Leadership": ["Pitch Night","Campus Pledge","Mentor Up","Vision Plan","Legacy Project"],
-};
-
-export const challenges: Challenge[] = Array.from({ length: 60 }, (_, i) => {
-  const day = i + 1;
-  const theme = themes[i % themes.length];
-  const list = titles[theme];
-  const title = list[Math.floor(i / themes.length) % list.length];
-  const phase = day <= 30 ? "October — Research" : "November — Action";
-  return {
-    day,
-    title,
-    theme,
-    blurb: `${phase}: ${theme.toLowerCase()} challenge centered on real, regional impact.`,
-    research: `Map ${theme.toLowerCase()} conditions in your region: collect 3 data points, 1 photo, and 1 stakeholder quote.`,
-    action: `Run a ${theme.toLowerCase()} intervention on campus this week. Document outcomes with metrics and one short reflection.`,
-  };
-});
-
-export function getChallenge(day: number) {
-  return challenges.find((c) => c.day === day);
+export function getPgcDay(day: number): PgcDay | undefined {
+  return PGC_DAYS.find(d => d.day === day);
 }
 
-export const universities = [
-  { name: "Harvard University", state: "MA", research: 9920, impact: 8410 },
-  { name: "UC Berkeley", state: "CA", research: 9820, impact: 7430 },
-  { name: "MIT", state: "MA", research: 9560, impact: 8050 },
-  { name: "Yale University", state: "CT", research: 9215, impact: 8120 },
-  { name: "University of Michigan", state: "MI", research: 8870, impact: 7980 },
-  { name: "Stanford University", state: "CA", research: 8640, impact: 7510 },
-  { name: "Arizona State University", state: "AZ", research: 8390, impact: 8245 },
-  { name: "University of Vermont", state: "VT", research: 8210, impact: 6890 },
-  { name: "Howard University", state: "DC", research: 7980, impact: 7720 },
-  { name: "Oberlin College", state: "OH", research: 7720, impact: 7110 },
-  { name: "UT Austin", state: "TX", research: 7580, impact: 6940 },
-  { name: "Duke University", state: "NC", research: 7340, impact: 7220 },
-  { name: "Spelman College", state: "GA", research: 7190, impact: 6810 },
-  { name: "University of Washington", state: "WA", research: 7045, impact: 6720 },
-  { name: "Santa Monica College", state: "CA", research: 6890, impact: 6520 },
-  { name: "Bunker Hill CC", state: "MA", research: 6610, impact: 6310 },
-];
+// Legacy compatibility — leaderboard now reads from the database.
+export const universities: never[] = [];
 
 export const partners = [
   "Patagonia","Seventh Generation","Ben & Jerry's","Klean Kanteen","Allbirds",
