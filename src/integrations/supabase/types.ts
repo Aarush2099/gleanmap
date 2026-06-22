@@ -38,6 +38,21 @@ export type Database = {
         }
         Relationships: []
       }
+      admin_emails: {
+        Row: {
+          created_at: string
+          email: string
+        }
+        Insert: {
+          created_at?: string
+          email: string
+        }
+        Update: {
+          created_at?: string
+          email?: string
+        }
+        Relationships: []
+      }
       country_challenges: {
         Row: {
           action_prompt: string | null
@@ -111,6 +126,7 @@ export type Database = {
           id: string
           participant_number: string
           points: number
+          role: Database["public"]["Enums"]["app_role"]
           school: string | null
           updated_at: string
         }
@@ -123,6 +139,7 @@ export type Database = {
           id: string
           participant_number?: string
           points?: number
+          role?: Database["public"]["Enums"]["app_role"]
           school?: string | null
           updated_at?: string
         }
@@ -135,6 +152,7 @@ export type Database = {
           id?: string
           participant_number?: string
           points?: number
+          role?: Database["public"]["Enums"]["app_role"]
           school?: string | null
           updated_at?: string
         }
@@ -297,13 +315,18 @@ export type Database = {
           total_points: number
         }[]
       }
-      has_role: {
-        Args: {
-          _role: Database["public"]["Enums"]["app_role"]
-          _user_id: string
-        }
-        Returns: boolean
-      }
+      has_role:
+        | {
+            Args: { _role: Database["public"]["Enums"]["app_role"] }
+            Returns: boolean
+          }
+        | {
+            Args: {
+              _role: Database["public"]["Enums"]["app_role"]
+              _user_id: string
+            }
+            Returns: boolean
+          }
       individual_leaderboard: {
         Args: { _limit?: number; _offset?: number }
         Returns: {
