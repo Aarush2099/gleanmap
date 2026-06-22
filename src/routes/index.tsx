@@ -1,7 +1,7 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
 import { Layout } from "@/components/Layout";
-import { ArrowRight, Sparkles, Lock } from "lucide-react";
-import { useState } from "react";
+import { ArrowRight, Sparkles } from "lucide-react";
+
 
 export const Route = createFileRoute("/")({
   head: () => ({
@@ -30,11 +30,8 @@ const STATS = [
 ];
 
 function Home() {
-  const [codeModal, setCodeModal] = useState(false);
-  const [codeInput, setCodeInput] = useState("");
-  const [codeError, setCodeError] = useState("");
-
   return (
+
     <Layout>
       {/* Hero */}
       <section className="relative">
@@ -150,80 +147,7 @@ function Home() {
         </div>
       </section>
 
-      {/* Easter Egg: Secret Admin Code Entry */}
-      <section className="container-pgc pb-20">
-        <div className="text-center">
-          <button
-            onClick={() => setCodeModal(true)}
-            className="inline-flex items-center gap-2 px-6 py-3 rounded-full text-sm font-semibold border border-amber-600/40 bg-amber-50 hover:bg-amber-100/50 text-amber-700 transition-colors"
-          >
-            <Lock className="size-4" /> 🔓 Unlock Secret Access
-          </button>
-        </div>
-      </section>
-
-      {/* Easter Egg: Secret Admin Code Modal */}
-      {codeModal && (
-        <div className="fixed inset-0 bg-black/50 z-50 flex items-center justify-center p-4" onClick={() => { setCodeModal(false); setCodeInput(""); setCodeError(""); }}>
-          <div className="bg-white dark:bg-slate-900 rounded-lg p-6 max-w-sm w-full" onClick={(e) => e.stopPropagation()}>
-            <div className="flex items-center gap-2 mb-4">
-              <Lock className="size-5 text-amber-600" />
-              <h2 className="text-lg font-bold">Secret Access Code</h2>
-            </div>
-            <p className="text-sm text-muted-foreground mb-4">Enter the access code to unlock admin privileges</p>
-            
-            <input
-              type="password"
-              value={codeInput}
-              onChange={(e) => {
-                setCodeInput(e.target.value);
-                setCodeError("");
-              }}
-              placeholder="Enter code..."
-              className="w-full px-3 py-2 border border-input rounded-lg mb-2 focus:outline-none focus:ring-2 focus:ring-primary"
-              onKeyDown={(e) => {
-                if (e.key === "Enter") {
-                  if (codeInput === "Amit@4979") {
-                    localStorage.setItem("admin_access", "true");
-                    setCodeModal(false);
-                    setCodeInput("");
-                    setCodeError("");
-                    window.location.reload();
-                  } else {
-                    setCodeError("Invalid code");
-                    setCodeInput("");
-                  }
-                }
-              }}
-            />
-            {codeError && <p className="text-sm text-red-500 mb-4">{codeError}</p>}
-            
-            <div className="flex gap-2">
-              <button
-                onClick={() => {
-                  if (codeInput === "Amit@4979") {
-                    localStorage.setItem("admin_access", "true");
-                    setCodeModal(false);
-                    setCodeInput("");
-                    setCodeError("");
-                    window.location.reload();
-                  } else {
-                    setCodeError("Invalid code");
-                    setCodeInput("");
-                  }
-                }}
-                className="flex-1 px-4 py-2 bg-amber-600 text-white rounded-lg font-semibold hover:bg-amber-700 transition-colors">
-                Unlock
-              </button>
-              <button
-                onClick={() => { setCodeModal(false); setCodeInput(""); setCodeError(""); }}
-                className="flex-1 px-4 py-2 border border-input rounded-lg font-semibold hover:bg-white/50 transition-colors">
-                Cancel
-              </button>
-            </div>
-          </div>
-        </div>
-      )}
     </Layout>
   );
 }
+

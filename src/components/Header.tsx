@@ -1,6 +1,6 @@
 import { Link, useNavigate } from "@tanstack/react-router";
 import { useEffect, useRef, useState } from "react";
-import { Menu, X, Globe, ChevronDown, LogIn, UserCircle2, Shield, Lock } from "lucide-react";
+import { Menu, X, Globe, ChevronDown, LogIn, UserCircle2, Shield } from "lucide-react";
 import { useI18n, LANGS, type Lang } from "@/lib/i18n";
 import { useAuth } from "@/lib/auth";
 import { BrandMark } from "./BrandMark";
@@ -18,12 +18,9 @@ export function Header() {
   const navigate = useNavigate();
   const [open, setOpen] = useState(false);
   const [langOpen, setLangOpen] = useState(false);
-  const [codeModal, setCodeModal] = useState(false);
-  const [codeInput, setCodeInput] = useState("");
-  const [codeError, setCodeError] = useState("");
   const langRef = useRef<HTMLDivElement>(null);
 
-  const isAdmin = typeof window !== "undefined" && localStorage.getItem("admin_access") === "true";
+  const isAdmin = profile?.role === "admin";
 
   useEffect(() => {
     function onClick(e: MouseEvent) {
@@ -80,25 +77,15 @@ export function Header() {
                 borderColor: 'rgba(251, 191, 36, 0.4)',
                 backgroundColor: 'rgba(251, 191, 36, 0.08)',
                 color: 'rgb(251, 191, 36)'
-              }}
-              onMouseEnter={(e) => {
-                (e.currentTarget as HTMLElement).style.backgroundColor = 'rgba(251, 191, 36, 0.18)';
-                (e.currentTarget as HTMLElement).style.borderColor = 'rgba(251, 191, 36, 0.7)';
-                (e.currentTarget as HTMLElement).style.boxShadow = '0 0 12px rgba(251, 191, 36, 0.2)';
-              }}
-              onMouseLeave={(e) => {
-                (e.currentTarget as HTMLElement).style.backgroundColor = 'rgba(251, 191, 36, 0.08)';
-                (e.currentTarget as HTMLElement).style.borderColor = 'rgba(251, 191, 36, 0.4)';
-                (e.currentTarget as HTMLElement).style.boxShadow = 'none';
               }}>
               <Shield className="size-4" /> Admin
             </Link>
           )}
 
           {user ? (
-            <button onClick={() => setCodeModal(true)} className="hidden sm:inline-flex items-center gap-2 px-3 py-2 rounded-full text-xs font-semibold bg-white/50 border border-white/40 hover:bg-white/70">
-              <UserCircle2 className="size-4" /> {profile?.full_name?.split(" ")[0] ?? "Account"}
-            </button>
+            <Link to="/profile" className="hidden sm:inline-flex items-center gap-2 px-3 py-2 rounded-full text-xs font-semibold bg-white/50 border border-white/40 hover:bg-white/70 transition-colors">
+              <UserCircle2 className="size-4" /> {profile?.full_name?.split(" ")[0] ?? "Profile"}
+            </Link>
           ) : (
             <button onClick={() => navigate({ to: "/auth" })}
               className="hidden sm:inline-flex items-center gap-2 px-4 py-2 rounded-full text-sm font-semibold text-white"
@@ -126,79 +113,11 @@ export function Header() {
                 <Shield className="size-4" /> Admin
               </Link>
             )}
-            {user && (
-              <button onClick={() => { setCodeModal(true); setOpen(false); }} className="py-2.5 text-sm font-semibold text-primary-dark flex items-center gap-2">
-                <Lock className="size-4" /> Secret Access
-              </button>
-            )}
             <Link to={user ? "/profile" : "/auth"} onClick={() => setOpen(false)} className="py-2.5 text-sm font-semibold text-primary-dark">
               {user ? "Profile" : "Sign in"}
             </Link>
           </div>
         </nav>
-      )}
-
-      {/* Easter Egg: Secret Admin Code Modal */}
-      {codeModal && (
-        <div className="fixed inset-0 bg-black/50 z-50 flex items-center justify-center p-4" onClick={() => { setCodeModal(false); setCodeInput(""); setCodeError(""); }}>
-          <div className="bg-white dark:bg-slate-900 rounded-lg p-6 max-w-sm w-full" onClick={(e) => e.stopPropagation()}>
-            <div className="flex items-center gap-2 mb-4">
-              <Lock className="size-5 text-amber-600" />
-              <h2 className="text-lg font-bold">Secret Access Code</h2>
-            </div>
-            <p className="text-sm text-muted-foreground mb-4">Enter the access code to unlock admin privileges</p>
-            
-            <input
-              type="password"
-              value={codeInput}
-              onChange={(e) => {
-                setCodeInput(e.target.value);
-                setCodeError("");
-              }}
-              placeholder="Enter code..."
-              className="w-full px-3 py-2 border border-input rounded-lg mb-2 focus:outline-none focus:ring-2 focus:ring-primary"
-              onKeyDown={(e) => {
-                if (e.key === "Enter") {
-                  if (codeInput === "Amit@4979") {
-                    localStorage.setItem("admin_access", "true");
-                    setCodeModal(false);
-                    setCodeInput("");
-                    setCodeError("");
-                    window.location.reload();
-                  } else {
-                    setCodeError("Invalid code");
-                    setCodeInput("");
-                  }
-                }
-              }}
-            />
-            {codeError && <p className="text-sm text-red-500 mb-4">{codeError}</p>}
-            
-            <div className="flex gap-2">
-              <button
-                onClick={() => {
-                  if (codeInput === "Amit@4979") {
-                    localStorage.setItem("admin_access", "true");
-                    setCodeModal(false);
-                    setCodeInput("");
-                    setCodeError("");
-                    window.location.reload();
-                  } else {
-                    setCodeError("Invalid code");
-                    setCodeInput("");
-                  }
-                }}
-                className="flex-1 px-4 py-2 bg-amber-600 text-white rounded-lg font-semibold hover:bg-amber-700 transition-colors">
-                Unlock
-              </button>
-              <button
-                onClick={() => { setCodeModal(false); setCodeInput(""); setCodeError(""); }}
-                className="flex-1 px-4 py-2 border border-input rounded-lg font-semibold hover:bg-white/50 transition-colors">
-                Cancel
-              </button>
-            </div>
-          </div>
-        </div>
       )}
     </header>
   );
