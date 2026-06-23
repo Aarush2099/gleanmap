@@ -1,7 +1,7 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
 import { Layout } from "@/components/Layout";
 import { ArrowRight, Sparkles } from "lucide-react";
-
+import { useEffect, useRef } from "react";
 
 export const Route = createFileRoute("/")({
   head: () => ({
@@ -22,24 +22,94 @@ const WINNERS = [
   { name: "Charles Amoani-Antwi", title: "PGC 2025 Third Place (Tie)", loc: "Kumasi, Ghana" },
 ];
 
-const STATS = [
-  { n: "16,423", l: "Schools" },
-  { n: "350,253", l: "Users" },
-  { n: "50", l: "States" },
-  { n: "185", l: "Countries" },
+const STATS: { n: number; display: string; l: string }[] = [
+  { n: 16423, display: "16,423", l: "Schools" },
+  { n: 350253, display: "350,253", l: "Users" },
+  { n: 50, display: "50", l: "States" },
+  { n: 185, display: "185", l: "Countries" },
 ];
 
-function Home() {
-  return (
+function prefersReducedMotion() {
+  return typeof window !== "undefined" && window.matchMedia?.("(prefers-reduced-motion: reduce)").matches;
+}
 
+function animateCounter(el: HTMLElement, target: number, duration = 1800) {
+  if (prefersReducedMotion()) { el.textContent = target.toLocaleString(); return; }
+  const start = performance.now();
+  const step = (now: number) => {
+    const progress = Math.min((now - start) / duration, 1);
+    const eased = 1 - Math.pow(1 - progress, 3);
+    el.textContent = Math.floor(eased * target).toLocaleString();
+    if (progress < 1) requestAnimationFrame(step);
+    else el.textContent = target.toLocaleString();
+  };
+  requestAnimationFrame(step);
+}
+
+const HEADLINE_WORDS = ["Project", "Green", "Challenge"];
+
+function Home() {
+  const statsRef = useRef<HTMLDivElement>(null);
+
+  // Scroll-reveal observer for .animate-on-scroll
+  useEffect(() => {
+    if (prefersReducedMotion()) {
+      document.querySelectorAll<HTMLElement>(".animate-on-scroll").forEach((el) => el.classList.add("in-view"));
+      return;
+    }
+    const observer = new IntersectionObserver(
+      (entries) => entries.forEach((e) => {
+        if (e.isIntersecting) {
+          e.target.classList.add("in-view");
+          observer.unobserve(e.target);
+        }
+      }),
+      { threshold: 0.15 },
+    );
+    document.querySelectorAll<HTMLElement>(".animate-on-scroll").forEach((el) => observer.observe(el));
+    return () => observer.disconnect();
+  }, []);
+
+  // Counter when stats scroll into view (run once)
+  useEffect(() => {
+    const root = statsRef.current;
+    if (!root) return;
+    const observer = new IntersectionObserver(
+      (entries) => entries.forEach((e) => {
+        if (e.isIntersecting) {
+          root.querySelectorAll<HTMLElement>("[data-counter]").forEach((el) => {
+            const target = Number(el.dataset.counter);
+            if (!Number.isFinite(target)) return;
+            animateCounter(el, target);
+          });
+          observer.disconnect();
+        }
+      }),
+      { threshold: 0.4 },
+    );
+    observer.observe(root);
+    return () => observer.disconnect();
+  }, []);
+
+  return (
     <Layout>
       {/* Hero */}
       <section className="relative">
         <div className="container-pgc grid lg:grid-cols-12 gap-y-10 gap-x-8 pt-16 pb-24 md:pt-24 md:pb-32">
-          <div className="lg:col-span-8">
+          <div className="lg:col-span-8 hero-float">
             <p className="eyebrow inline-flex items-center gap-2"><Sparkles className="size-3" /> Turning Green · est. 2011</p>
             <h1 className="mt-5 text-5xl md:text-7xl font-bold tracking-[-0.03em] leading-[0.95]">
-              Project Green<br /><span className="text-primary">Challenge</span>
+              <span className="word-reveal">
+                {HEADLINE_WORDS.slice(0, 2).map((w, i) => (
+                  <span key={w} style={{ animationDelay: `${i * 40}ms` }}>
+                    {w}{i < 1 ? "\u00A0" : ""}
+                  </span>
+                ))}
+              </span>
+              <br />
+              <span className="word-reveal text-primary">
+                <span style={{ animationDelay: "80ms" }}>Challenge</span>
+              </span>
             </h1>
             <p className="mt-7 max-w-2xl text-lg leading-relaxed text-foreground/80">
               Project Green Challenge (PGC) educates, empowers, and mobilizes high school, college, and graduate students
@@ -58,13 +128,16 @@ function Home() {
       </section>
 
       {/* Stats */}
-      <section className="container-pgc pb-20">
-        <div className="glass-card p-8 md:p-12">
+      <section className="container-pgc pb-20 animate-on-scroll">
+        <div ref={statsRef} className="glass-card p-8 md:p-12">
           <p className="text-center text-xs font-bold uppercase tracking-[0.3em] text-primary-dark">Unite With Students Globally To Take Climate Action</p>
           <div className="mt-8 grid grid-cols-2 md:grid-cols-4 gap-6">
             {STATS.map(s => (
               <div key={s.l} className="text-center">
-                <p className="text-4xl md:text-5xl font-bold tabular-nums text-foreground">{s.n}</p>
+                <p
+                  className="text-4xl md:text-5xl font-bold tabular-nums text-foreground"
+                  data-counter={s.n}
+                >0</p>
                 <p className="mt-1 text-xs font-semibold uppercase tracking-widest text-muted-foreground">{s.l}</p>
               </div>
             ))}
@@ -77,7 +150,7 @@ function Home() {
       </section>
 
       {/* Program details */}
-      <section className="container-pgc pb-24">
+      <section className="container-pgc pb-24 animate-on-scroll">
         <div className="grid lg:grid-cols-12 gap-x-8 gap-y-6">
           <div className="lg:col-span-5">
             <p className="eyebrow">// 01 — Program</p>
@@ -97,14 +170,14 @@ function Home() {
       </section>
 
       {/* Winners */}
-      <section className="container-pgc pb-20">
+      <section className="container-pgc pb-20 animate-on-scroll">
         <div className="text-center">
           <p className="eyebrow">// Honor Roll</p>
           <h2 className="mt-3 text-3xl md:text-4xl font-bold tracking-tight">Congrats to PGC 2025 Winners!</h2>
         </div>
         <div className="mt-10 grid grid-cols-2 lg:grid-cols-4 gap-5">
           {WINNERS.map(w => (
-            <div key={w.name} className="glass-card p-4">
+            <div key={w.name} className="glass-card pgc-card p-4">
               <div className="aspect-square w-full rounded-2xl bg-gradient-to-br from-mint/40 to-primary/20 grid place-items-center border border-white/60">
                 <span className="font-mono text-xs uppercase tracking-widest text-primary-dark/60">photo</span>
               </div>
@@ -127,7 +200,7 @@ function Home() {
       </section>
 
       {/* Learn. Do. Connect. Win. + video */}
-      <section className="container-pgc pb-24">
+      <section className="container-pgc pb-24 animate-on-scroll">
         <div className="text-center max-w-2xl mx-auto">
           <p className="eyebrow">// Tagline</p>
           <h2 className="mt-3 text-4xl md:text-5xl font-bold tracking-tight">Learn. Do. Connect. Win.</h2>
@@ -146,8 +219,6 @@ function Home() {
           </div>
         </div>
       </section>
-
     </Layout>
   );
 }
-

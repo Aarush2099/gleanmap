@@ -22,6 +22,8 @@ export function Header() {
 
   const isAdmin = profile?.role === "admin";
 
+  const [scrolled, setScrolled] = useState(false);
+
   useEffect(() => {
     function onClick(e: MouseEvent) {
       if (langRef.current && !langRef.current.contains(e.target as Node)) setLangOpen(false);
@@ -30,9 +32,16 @@ export function Header() {
     return () => document.removeEventListener("mousedown", onClick);
   }, []);
 
+  useEffect(() => {
+    const onScroll = () => setScrolled(window.scrollY > 60);
+    onScroll();
+    window.addEventListener("scroll", onScroll, { passive: true });
+    return () => window.removeEventListener("scroll", onScroll);
+  }, []);
+
   return (
     <header className="sticky top-0 z-40 px-3 pt-3">
-      <div className="container-pgc pgc-glass--nav flex h-16 items-center gap-6 px-4">
+      <div className={`container-pgc pgc-glass--nav flex h-16 items-center gap-6 px-4 transition-[background-color,box-shadow] duration-300 ${scrolled ? "nav-scrolled" : ""}`}>
         <Link to="/" className="flex items-center gap-2 shrink-0" onClick={() => setOpen(false)} aria-label="PGC Home">
           <BrandMark />
         </Link>
@@ -40,8 +49,8 @@ export function Header() {
         <nav className="hidden lg:flex items-center gap-1 ml-2">
           {NAV.map((n) => (
             <Link key={n.to + n.label} to={n.to}
-              className="px-3 py-2 text-sm font-medium text-foreground/75 hover:text-foreground rounded-full hover:bg-white/40 transition-colors"
-              activeProps={{ className: "text-[var(--leaf)] bg-white/50" }}
+              className="nav-link px-3 py-2 text-sm font-medium text-foreground/75 hover:text-foreground rounded-full transition-colors"
+              activeProps={{ className: "nav-link is-active text-[var(--leaf)] px-3 py-2 text-sm font-medium rounded-full" }}
               activeOptions={{ exact: n.to === "/" }}>
               {n.label}
             </Link>
