@@ -24,7 +24,7 @@ function SkeletonRows({ cols }: { cols: number }) {
         <tr key={i} className="border-b border-border">
           {Array.from({ length: cols }).map((__, j) => (
             <td key={j} className="py-3 pr-4">
-              <div className="h-4 w-full max-w-[160px] rounded bg-secondary animate-pulse" />
+              <div className="skeleton h-4 w-full max-w-[160px]" />
             </td>
           ))}
         </tr>
