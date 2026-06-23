@@ -32,7 +32,7 @@ export function Header() {
 
   return (
     <header className="sticky top-0 z-40 px-3 pt-3">
-      <div className="container-pgc glass-panel flex h-16 items-center gap-6 px-4">
+      <div className="container-pgc pgc-glass--nav flex h-16 items-center gap-6 px-4">
         <Link to="/" className="flex items-center gap-2 shrink-0" onClick={() => setOpen(false)} aria-label="PGC Home">
           <BrandMark />
         </Link>
