@@ -449,16 +449,45 @@
 }
 .animate-fade-in { animation: fade-in 0.35s ease-out both; }
 
-@keyframes page-in {
-  from { opacity: 0; transform: translateY(12px) scale(0.995); filter: blur(4px); }
-  to   { opacity: 1; transform: translateY(0) scale(1); filter: blur(0); }
+/* Page transitions */
+@keyframes pageEnter {
+  from { opacity: 0; transform: translateY(12px); }
+  to   { opacity: 1; transform: translateY(0); }
 }
-.pgc-page-transition {
-  animation: page-in 0.45s cubic-bezier(0.22, 1, 0.36, 1) both;
+@keyframes pageExit {
+  from { opacity: 1; transform: translateY(0); }
+  to   { opacity: 0; transform: translateY(-8px); }
+}
+.page-enter { animation: pageEnter 280ms ease-out forwards; will-change: transform, opacity; }
+.page-exit  { animation: pageExit  180ms ease-in  forwards; will-change: transform, opacity; }
+.pgc-page-transition { animation: pageEnter 280ms ease-out forwards; }
+
+/* Hero motion */
+@keyframes float {
+  0%, 100% { transform: translateY(0); }
+  50%      { transform: translateY(-6px); }
+}
+.hero-float { animation: float 6s ease-in-out infinite; will-change: transform; }
+
+@keyframes wordReveal {
+  from { opacity: 0; transform: translateY(16px); }
+  to   { opacity: 1; transform: translateY(0); }
+}
+.word-reveal > span {
+  display: inline-block;
+  opacity: 0;
+  animation: wordReveal 520ms cubic-bezier(0.22, 1, 0.36, 1) forwards;
 }
 
-@media (prefers-reduced-motion: reduce) {
-  .pgc-page-transition, .animate-fade-in { animation: none; }
+/* Generic scroll reveal */
+.animate-on-scroll {
+  opacity: 0;
+  transform: translateY(24px);
+  transition: opacity 500ms ease, transform 500ms ease;
+}
+.animate-on-scroll.in-view {
+  opacity: 1;
+  transform: translateY(0);
 }
 
 /* Subtle hover lift used across interactive cards */
@@ -467,14 +496,97 @@
   &:hover { transform: translateY(-2px); }
 }
 
-/* Shimmer for skeletons */
-@keyframes shimmer {
-  0% { background-position: -200% 0; }
-  100% { background-position: 200% 0; }
+/* Generic interactive card hover */
+@utility pgc-card {
+  transition: transform var(--transition-base), box-shadow var(--transition-base), border-color var(--transition-base);
+  &:hover {
+    transform: translateY(-3px);
+    box-shadow: 0 8px 32px rgba(0, 0, 0, 0.18), 0 2px 8px rgba(34, 197, 94, 0.12);
+    border-color: rgba(255, 255, 255, 0.24);
+  }
+  &:active { transform: translateY(-1px); }
 }
-.skeleton-shimmer {
-  background: linear-gradient(90deg, rgba(255,255,255,0.04) 0%, rgba(255,255,255,0.10) 50%, rgba(255,255,255,0.04) 100%);
-  background-size: 200% 100%;
-  animation: shimmer 1.6s linear infinite;
+
+/* Primary gradient button (alt to btn-pgc) */
+@utility pgc-btn-primary {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: var(--space-2);
+  background: linear-gradient(135deg, var(--green-primary), var(--green-dark));
+  border: 1px solid rgba(255,255,255,0.20);
+  border-radius: var(--radius-md);
+  color: #fff;
+  font-weight: 700;
+  padding: 12px 28px;
+  transition: transform var(--transition-fast), box-shadow var(--transition-fast), filter var(--transition-fast);
+  cursor: pointer;
+  &:hover { transform: scale(1.02); filter: brightness(1.1); box-shadow: 0 0 20px rgba(34,197,94,0.35); }
+  &:active { transform: scale(0.98); }
+  &:focus-visible { outline: 2px solid var(--mint); outline-offset: 2px; }
+}
+
+/* Nav link with sliding underline */
+@utility nav-link {
+  position: relative;
+  &::after {
+    content: '';
+    position: absolute;
+    left: 12px; right: 12px;
+    bottom: 4px;
+    height: 2px;
+    background: var(--green-primary);
+    transform-origin: left center;
+    transform: scaleX(0);
+    transition: transform 220ms ease;
+  }
+  &:hover::after, &.is-active::after { transform: scaleX(1); }
+}
+
+/* Sticky header gains opacity on scroll */
+.nav-scrolled {
+  background: rgba(8, 16, 12, 0.82) !important;
+  box-shadow: 0 12px 32px rgba(0, 0, 0, 0.35), inset 0 1px 0 rgba(255,255,255,0.10);
+}
+
+/* Achievement badge pop + toast */
+@keyframes badgePop {
+  0%   { transform: scale(0.5); opacity: 0; }
+  70%  { transform: scale(1.1); opacity: 1; }
+  100% { transform: scale(1.0); }
+}
+.badge-unlock { animation: badgePop 500ms cubic-bezier(0.175, 0.885, 0.32, 1.275) forwards; }
+
+@keyframes toastSlide {
+  from { transform: translateX(110%); opacity: 0; }
+  to   { transform: translateX(0); opacity: 1; }
+}
+.achievement-toast {
+  position: fixed; top: 80px; right: 24px; z-index: 9999;
+  animation: toastSlide 350ms ease-out forwards;
+}
+
+/* Shimmer skeletons */
+@keyframes shimmer {
+  0% { background-position: -400px 0; }
+  100% { background-position: 400px 0; }
+}
+.skeleton, .skeleton-shimmer {
+  background: linear-gradient(90deg, rgba(255,255,255,0.05) 25%, rgba(255,255,255,0.10) 37%, rgba(255,255,255,0.05) 63%);
+  background-size: 800px 100%;
+  animation: shimmer 1.4s ease infinite;
   border-radius: var(--radius-sm);
+}
+
+/* Respect reduced motion — disable all decorative motion */
+@media (prefers-reduced-motion: reduce) {
+  *, *::before, *::after {
+    animation-duration: 0.001ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.001ms !important;
+    scroll-behavior: auto !important;
+  }
+  .animate-on-scroll { opacity: 1; transform: none; }
+  .word-reveal > span { opacity: 1; }
+  .hero-float { animation: none; }
 }
