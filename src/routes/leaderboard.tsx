@@ -3,6 +3,8 @@ import { Layout } from "@/components/Layout";
 import { useEffect, useState } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/lib/auth";
+import { getFlagThumb } from "@/lib/flags";
+
 
 export const Route = createFileRoute("/leaderboard")({
   head: () => ({
@@ -110,7 +112,15 @@ function Leaderboard() {
                     <tr key={r.id} className={`border-b border-border ${mine ? "bg-[var(--leaf)]/10" : "hover:bg-secondary/60"} transition-colors`}>
                       <td className="py-3 pr-4 text-muted-foreground">{String(r.rank).padStart(2, "0")}</td>
                       <td className="py-3 pr-4 font-semibold">{r.full_name ?? "Anonymous"}{mine && <span className="ml-2 text-[10px] uppercase tracking-widest text-[var(--leaf)]">you</span>}</td>
-                      <td className="py-3 pr-4 hidden sm:table-cell text-muted-foreground">{r.country ?? "—"}</td>
+                      <td className="py-3 pr-4 hidden sm:table-cell text-muted-foreground">
+                        {r.country ? (
+                          <span className="inline-flex items-center gap-2">
+                            <img src={getFlagThumb(r.country)} alt="" className="h-3 w-auto rounded-[2px]" />
+                            {r.country}
+                          </span>
+                        ) : "—"}
+                      </td>
+
                       <td className="py-3 pr-4 text-right font-semibold">{r.points.toLocaleString()}</td>
                     </tr>
                   );
@@ -147,7 +157,14 @@ function Leaderboard() {
                   return (
                     <tr key={r.country} className={`border-b border-border ${mine ? "bg-[var(--leaf)]/10" : "hover:bg-secondary/60"} transition-colors`}>
                       <td className="py-3 pr-4 text-muted-foreground">{String(r.rank).padStart(2, "0")}</td>
-                      <td className="py-3 pr-4 font-semibold">{r.country}{mine && <span className="ml-2 text-[10px] uppercase tracking-widest text-[var(--leaf)]">your country</span>}</td>
+                      <td className="py-3 pr-4 font-semibold">
+                        <span className="inline-flex items-center gap-2">
+                          <img src={getFlagThumb(r.country)} alt="" className="h-3 w-auto rounded-[2px]" />
+                          {r.country}
+                        </span>
+                        {mine && <span className="ml-2 text-[10px] uppercase tracking-widest text-[var(--leaf)]">your country</span>}
+                      </td>
+
                       <td className="py-3 pr-4 text-right text-muted-foreground">{r.participants.toLocaleString()}</td>
                       <td className="py-3 pr-4 text-right font-semibold">{r.total_points.toLocaleString()}</td>
                     </tr>

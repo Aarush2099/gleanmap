@@ -2,9 +2,10 @@ import { createFileRoute, useNavigate, Link } from "@tanstack/react-router";
 import { Layout } from "@/components/Layout";
 import { useEffect, useState } from "react";
 import { supabase } from "@/integrations/supabase/client";
-import { COUNTRIES } from "@/lib/countries";
+import { CountryCombobox } from "@/components/CountryCombobox";
 import { toast } from "sonner";
 import { Mail, ArrowLeft, CheckCircle2 } from "lucide-react";
+
 
 type SearchParams = { mode?: string; confirmed?: string };
 
@@ -60,6 +61,8 @@ function AuthPage() {
   const [view, setView] = useState<View>(initialView);
   const [fullName, setFullName] = useState("");
   const [country, setCountry] = useState("");
+  const [school, setSchool] = useState("");
+
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [newPassword, setNewPassword] = useState("");
@@ -90,6 +93,10 @@ function AuthPage() {
       toast.error("Please select your country.");
       return;
     }
+    if (school.trim() === "") {
+      toast.error("School name is required");
+      return;
+    }
     setBusy(true);
     try {
       const redirectUrl = `${window.location.origin}/auth?confirmed=true`;
@@ -98,9 +105,11 @@ function AuthPage() {
         password,
         options: {
           emailRedirectTo: redirectUrl,
-          data: { full_name: fullName, country },
+          data: { full_name: fullName, country, school: school.trim() },
         },
       });
+
+
 
       if (error) {
         // Supabase returns "user_already_exists" / 422 for already-confirmed emails.
@@ -261,23 +270,24 @@ function AuthPage() {
                 <FieldLabel>
                   Country <span className="text-destructive">*</span>
                 </FieldLabel>
-                <select
-                  value={country}
-                  onChange={(e) => setCountry(e.target.value)}
+                <CountryCombobox value={country} onChange={setCountry} required />
+
+                <FieldLabel>
+                  School <span className="text-destructive">*</span>
+                </FieldLabel>
+                <Input
                   required
-                  className="rounded-lg border border-input bg-white/80 px-3 py-2.5 text-sm"
-                >
-                  <option value="">— Select your country —</option>
-                  {COUNTRIES.map((c) => (
-                    <option key={c} value={c}>{c}</option>
-                  ))}
-                </select>
+                  value={school}
+                  onChange={(e) => setSchool(e.target.value)}
+                  placeholder="Your school or university"
+                />
 
                 <FieldLabel>Email</FieldLabel>
                 <Input type="email" required value={email} onChange={(e) => setEmail(e.target.value)} placeholder="you@school.edu" />
 
                 <FieldLabel>Password</FieldLabel>
                 <Input type="password" required minLength={6} value={password} onChange={(e) => setPassword(e.target.value)} />
+
 
                 <button type="submit" disabled={busy} className="btn-pgc mt-2 disabled:opacity-60">
                   {busy ? "Working…" : "Create account"}
