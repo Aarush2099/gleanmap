@@ -2,7 +2,7 @@ import { createFileRoute, redirect } from "@tanstack/react-router";
 import { Layout } from "@/components/Layout";
 import { useAuth } from "@/lib/auth";
 import { supabase } from "@/integrations/supabase/client";
-import { useEffect, useMemo, useState } from "react";
+import { Fragment, useEffect, useMemo, useState } from "react";
 import { generateAiFeedback } from "@/lib/submissions.functions";
 import {
   generateCountryChallenge,
@@ -819,8 +819,8 @@ function AuditLogTab() {
             </thead>
             <tbody>
               {rows.map((r) => (
-                <>
-                  <tr key={r.id} className="border-b border-border align-top hover:bg-white/30 cursor-pointer"
+                <Fragment key={r.id}>
+                  <tr className="border-b border-border align-top hover:bg-white/30 cursor-pointer"
                     onClick={() => setExpanded(expanded === r.id ? null : r.id)}>
                     <td className="py-3 pr-3 font-mono text-xs whitespace-nowrap">{new Date(r.created_at).toLocaleString()}</td>
                     <td className="py-3 pr-3 text-xs">{r.admin_email ?? r.admin_id ?? "—"}</td>
@@ -831,14 +831,15 @@ function AuditLogTab() {
                     </td>
                   </tr>
                   {expanded === r.id && r.detail && (
-                    <tr key={r.id + "-detail"}>
+                    <tr>
                       <td colSpan={5} className="py-3 pr-3 bg-muted/50">
                         <pre className="text-[11px] overflow-x-auto">{JSON.stringify(r.detail, null, 2)}</pre>
                       </td>
                     </tr>
                   )}
-                </>
+                </Fragment>
               ))}
+
               {rows.length === 0 && (
                 <tr><td colSpan={5} className="py-12 text-center text-muted-foreground">No events yet.</td></tr>
               )}
