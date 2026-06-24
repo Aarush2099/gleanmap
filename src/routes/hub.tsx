@@ -4,6 +4,8 @@ import { useAuth } from "@/lib/auth";
 import { supabase } from "@/integrations/supabase/client";
 import { useEffect, useState } from "react";
 import { ArrowRight, Microscope, Megaphone, FileDown, UserCircle2 } from "lucide-react";
+import { getFlagThumb } from "@/lib/flags";
+
 
 declare namespace JSX {
   interface IntrinsicElements {
@@ -66,8 +68,14 @@ function Hub() {
             <p className="eyebrow">// Your Hub</p>
             <h1 className="mt-2 text-3xl md:text-4xl font-bold">
               Welcome back, {profile?.full_name ?? "friend"}
-              {profile?.country && <span className="text-muted-foreground font-normal"> · {profile.country}</span>}
+              {profile?.country && (
+                <span className="text-muted-foreground font-normal inline-flex items-center gap-2 ml-1">
+                  · <img src={getFlagThumb(profile.country)} alt="" className="inline h-3.5 w-auto rounded-[2px]" />
+                  {profile.country}
+                </span>
+              )}
             </h1>
+
           </div>
           <Link to="/profile" className="btn-outline-pgc text-sm"><UserCircle2 className="size-4" /> Profile</Link>
         </div>
