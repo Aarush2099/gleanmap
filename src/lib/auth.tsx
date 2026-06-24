@@ -9,6 +9,8 @@ export type Profile = {
   role: "student" | "admin";
   country: string | null;
   school: string | null;
+  points: number | null;
+  participant_number: string | null;
 };
 
 type Ctx = {
