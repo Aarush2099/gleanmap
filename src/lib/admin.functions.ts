@@ -209,7 +209,7 @@ export type AuditRow = {
   action_type: string;
   target_type: string | null;
   target_id: string | null;
-  detail: Record<string, unknown> | null;
+  detail: Record<string, string | number | boolean | null> | null;
   created_at: string;
 };
 
