@@ -27,7 +27,8 @@ async function tryLog(
 ) {
   try {
     const adminEmail = (ctx.claims?.email as string | undefined) ?? null;
-    await ctx.supabase.from("admin_actions").insert({
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    await (ctx.supabase as any).from("admin_actions").insert({
       admin_id: ctx.userId,
       admin_email: adminEmail,
       action_type,
@@ -39,6 +40,7 @@ async function tryLog(
     /* table may not exist yet — ignore */
   }
 }
+
 
 // ── Users ────────────────────────────────────────────────────────────────────
 
@@ -147,15 +149,17 @@ export const listAdminSettings = createServerFn({ method: "GET" })
   .handler(async ({ context }) => {
     await assertAdmin(context);
     try {
-      const { data, error } = await context.supabase
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      const { data, error } = await (context.supabase as any)
         .from("admin_settings")
         .select("key,value,updated_at");
       if (error) return { settings: [], missing: true };
-      return { settings: data ?? [], missing: false };
+      return { settings: (data ?? []) as { key: string; value: string; updated_at: string }[], missing: false };
     } catch {
       return { settings: [], missing: true };
     }
   });
+
 
 export const saveAdminSettings = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
@@ -167,10 +171,12 @@ export const saveAdminSettings = createServerFn({ method: "POST" })
     const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
     const now = new Date().toISOString();
     const rows = data.entries.map((e) => ({ ...e, updated_at: now }));
-    const { error } = await supabaseAdmin
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    const { error } = await (supabaseAdmin as any)
       .from("admin_settings")
       .upsert(rows, { onConflict: "key" });
     if (error) throw error;
+
     await tryLog(context, "save_settings", {}, { keys: data.entries.map((e) => e.key) });
     return { ok: true, saved_at: now };
   });
@@ -185,7 +191,9 @@ export const getPublicSettings = createServerFn({ method: "GET" })
         process.env.SUPABASE_PUBLISHABLE_KEY!,
         { auth: { storage: undefined, persistSession: false, autoRefreshToken: false } },
       );
-      const { data } = await sb.from("admin_settings").select("key,value");
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      const { data } = await (sb as any).from("admin_settings").select("key,value");
+
       return { settings: data ?? [] };
     } catch {
       return { settings: [] };
@@ -193,6 +201,18 @@ export const getPublicSettings = createServerFn({ method: "GET" })
   });
 
 // ── Audit log ────────────────────────────────────────────────────────────────
+
+export type AuditRow = {
+  id: string;
+  admin_id: string | null;
+  admin_email: string | null;
+  action_type: string;
+  target_type: string | null;
+  target_id: string | null;
+  detail: Record<string, unknown> | null;
+  created_at: string;
+};
+
 
 export const listAuditLog = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
@@ -206,7 +226,8 @@ export const listAuditLog = createServerFn({ method: "POST" })
   .handler(async ({ data, context }) => {
     await assertAdmin(context);
     try {
-      let q = context.supabase
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      let q: any = (context.supabase as any)
         .from("admin_actions")
         .select("id,admin_id,admin_email,action_type,target_type,target_id,detail,created_at", { count: "exact" })
         .order("created_at", { ascending: false });
@@ -214,9 +235,10 @@ export const listAuditLog = createServerFn({ method: "POST" })
       const from = (data.page - 1) * data.pageSize;
       const to = from + data.pageSize - 1;
       const { data: rows, count, error } = await q.range(from, to);
-      if (error) return { rows: [], total: 0, missing: true };
-      return { rows: rows ?? [], total: count ?? 0, missing: false };
+      if (error) return { rows: [] as AuditRow[], total: 0, missing: true };
+      return { rows: (rows ?? []) as AuditRow[], total: count ?? 0, missing: false };
     } catch {
-      return { rows: [], total: 0, missing: true };
+      return { rows: [] as AuditRow[], total: 0, missing: true };
+
     }
   });
