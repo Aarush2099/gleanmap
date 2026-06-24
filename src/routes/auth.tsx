@@ -2,9 +2,10 @@ import { createFileRoute, useNavigate, Link } from "@tanstack/react-router";
 import { Layout } from "@/components/Layout";
 import { useEffect, useState } from "react";
 import { supabase } from "@/integrations/supabase/client";
-import { COUNTRIES } from "@/lib/countries";
+import { CountryCombobox } from "@/components/CountryCombobox";
 import { toast } from "sonner";
 import { Mail, ArrowLeft, CheckCircle2 } from "lucide-react";
+
 
 type SearchParams = { mode?: string; confirmed?: string };
 
