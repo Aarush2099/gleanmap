@@ -17,7 +17,8 @@ export const Route = createFileRoute("/challenges/")({
 
 const YEAR = 2026;
 
-type Theme = { day_number: number; theme: string; prompt: string | null; is_rest_day: boolean };
+type Theme = { day_number: number; theme: string; prompt: string | null; is_rest_day: boolean; is_milestone: boolean };
+type RegionalContext = { context_headline: string; context_body: string; priority: string };
 
 type Sub = {
   id: string;
