@@ -1268,7 +1268,12 @@ function CountryChallengesPanel() {
             <option value="failed">Failed</option>
           </select>
         </div>
+        <label className="inline-flex items-center gap-2 text-sm font-medium pb-2">
+          <input type="checkbox" checked={milestoneFirst} onChange={(e) => setMilestoneFirst(e.target.checked)} />
+          ★ Milestone days first
+        </label>
       </div>
+
 
       <div className="mt-4 space-y-3">
         {all.length === 0 && (
