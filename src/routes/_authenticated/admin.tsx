@@ -1123,6 +1123,7 @@ function CountryChallengesPanel() {
   const [fDay, setFDay] = useState<string>("");
   const [fStatus, setFStatus] = useState<string>("");
   const [busy, setBusy] = useState<string | null>(null);
+  const [milestoneFirst, setMilestoneFirst] = useState(false);
   const [bulkBusy, setBulkBusy] = useState(false);
   const [editKey, setEditKey] = useState<string | null>(null);
   const [editDraft, setEditDraft] = useState({ title: "", brief: "", action_prompt: "", success_criteria: "", summary: "" });
