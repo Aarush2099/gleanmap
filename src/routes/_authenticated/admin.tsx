@@ -209,7 +209,12 @@ function SubmissionsTab({ profileId: _profileId }: { profileId: string }) {
             <option value="reviewed">Reviewed</option>
           </select>
         </div>
+        <label className="inline-flex items-center gap-2 text-sm font-medium pb-2">
+          <input type="checkbox" checked={milestonesOnly} onChange={(e) => setMilestonesOnly(e.target.checked)} />
+          ★ Milestones only
+        </label>
       </div>
+
 
       <div className="mt-6 overflow-x-auto">
         <table className="w-full text-sm">
