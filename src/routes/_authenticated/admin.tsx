@@ -10,7 +10,6 @@ import {
   editCountryChallenge,
 } from "@/lib/country-challenges.functions";
 import {
-  deleteUserAccount,
   setUserRole,
   adminUpdateProfile,
   upsertTheme,
@@ -18,6 +17,7 @@ import {
   saveAdminSettings,
   listAuditLog,
 } from "@/lib/admin.functions";
+import { deleteUserById } from "@/lib/deleteUser.functions";
 import { useServerFn } from "@tanstack/react-start";
 import { toast } from "sonner";
 import {
