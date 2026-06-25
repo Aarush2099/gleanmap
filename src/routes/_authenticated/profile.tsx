@@ -193,6 +193,9 @@ function ProfilePage() {
             <button onClick={exportPassport} className="btn-outline-pgc justify-center w-full mt-3">
               <Download className="size-4" /> Export Passport
             </button>
+            <Link to="/certificate" className="btn-outline-pgc justify-center w-full mt-2">
+              Academic Certificate →
+            </Link>
           </div>
 
           {/* ── RIGHT: Stamps + Stats + Edit ── */}

@@ -112,6 +112,7 @@ function SubmissionsTab({ profileId: _profileId }: { profileId: string }) {
   const [fCountry, setFCountry] = useState("");
   const [fPhase, setFPhase] = useState("");
   const [fStatus, setFStatus] = useState("");
+  const [milestonesOnly, setMilestonesOnly] = useState(false);
   const generate = useServerFn(generateAiFeedback);
 
   useEffect(() => {
@@ -134,7 +135,8 @@ function SubmissionsTab({ profileId: _profileId }: { profileId: string }) {
   const filtered = rows.filter((r) =>
     (!fCountry || r.country === fCountry) &&
     (!fPhase || r.phase === fPhase) &&
-    (!fStatus || r.status === fStatus),
+    (!fStatus || r.status === fStatus) &&
+    (!milestonesOnly || (r.day_number != null && [5, 10, 15, 20, 25, 30].includes(r.day_number))),
   );
 
   async function runOne(id: string) {
@@ -207,7 +209,12 @@ function SubmissionsTab({ profileId: _profileId }: { profileId: string }) {
             <option value="reviewed">Reviewed</option>
           </select>
         </div>
+        <label className="inline-flex items-center gap-2 text-sm font-medium pb-2">
+          <input type="checkbox" checked={milestonesOnly} onChange={(e) => setMilestonesOnly(e.target.checked)} />
+          ★ Milestones only
+        </label>
       </div>
+
 
       <div className="mt-6 overflow-x-auto">
         <table className="w-full text-sm">
@@ -516,13 +523,243 @@ type ThemeRow = {
 };
 
 function ChallengesTab() {
+  const [sub, setSub] = useState<"themes" | "regional" | "country">("themes");
+  const [rcCount, setRcCount] = useState<{ rows: number; countries: number }>({ rows: 0, countries: 0 });
+
+  useEffect(() => {
+    (async () => {
+      const { data } = await supabase.from("regional_contexts").select("country");
+      const rows = data ?? [];
+      setRcCount({ rows: rows.length, countries: new Set(rows.map((r: { country: string }) => r.country)).size });
+    })();
+  }, []);
+
   return (
-    <div className="space-y-10">
-      <ThemeEditor />
-      <CountryChallengesPanel />
+    <div>
+      <div className="inline-flex gap-1 p-1 rounded-full glass-card mb-6">
+        {([
+          ["themes", "Theme Editor"],
+          ["regional", `Regional Contexts${rcCount.rows ? ` · ${rcCount.rows}/${rcCount.countries}` : ""}`],
+          ["country", "Country Challenges"],
+        ] as const).map(([k, lbl]) => (
+          <button key={k} onClick={() => setSub(k as typeof sub)}
+            className={`px-4 py-1.5 text-xs font-semibold rounded-full transition ${sub === k ? "bg-primary text-primary-foreground" : "text-foreground/70 hover:text-foreground"}`}>
+            {lbl}
+          </button>
+        ))}
+      </div>
+      {sub === "themes" && <ThemeEditor />}
+      {sub === "regional" && <RegionalContextsPanel onCountChange={setRcCount} />}
+      {sub === "country" && <CountryChallengesPanel />}
     </div>
   );
 }
+
+type RegionalContextRow = {
+  id: string;
+  country: string;
+  theme: string;
+  day_number: number;
+  year: number;
+  context_headline: string;
+  context_body: string;
+  priority: "critical" | "high" | "medium" | "low";
+};
+
+function RegionalContextsPanel({ onCountChange }: { onCountChange: (c: { rows: number; countries: number }) => void }) {
+  const [rows, setRows] = useState<RegionalContextRow[]>([]);
+  const [themes, setThemes] = useState<{ day_number: number; theme: string }[]>([]);
+  const [fCountry, setFCountry] = useState("");
+  const [fDay, setFDay] = useState("");
+  const [editing, setEditing] = useState<string | "new" | null>(null);
+  const emptyDraft: Omit<RegionalContextRow, "id"> = {
+    country: "", theme: "", day_number: 1, year: YEAR,
+    context_headline: "", context_body: "", priority: "medium",
+  };
+  const [draft, setDraft] = useState<Omit<RegionalContextRow, "id">>(emptyDraft);
+  const [busy, setBusy] = useState(false);
+
+  async function reload() {
+    const { data } = await supabase
+      .from("regional_contexts")
+      .select("id,country,theme,day_number,year,context_headline,context_body,priority")
+      .order("country").order("day_number");
+    const list = (data as RegionalContextRow[]) ?? [];
+    setRows(list);
+    onCountChange({ rows: list.length, countries: new Set(list.map(r => r.country)).size });
+  }
+  useEffect(() => {
+    reload();
+    (async () => {
+      const { data } = await supabase.from("program_themes").select("day_number,theme").eq("year", YEAR).order("day_number");
+      setThemes((data as { day_number: number; theme: string }[]) ?? []);
+    })();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
+
+  function startNew() {
+    setEditing("new");
+    setDraft({ ...emptyDraft });
+  }
+  function startEdit(r: RegionalContextRow) {
+    setEditing(r.id);
+    setDraft({ country: r.country, theme: r.theme, day_number: r.day_number, year: r.year, context_headline: r.context_headline, context_body: r.context_body, priority: r.priority });
+  }
+
+  async function save() {
+    if (!draft.country || !draft.context_headline.trim() || !draft.context_body.trim()) {
+      return toast.error("Country, headline, and body are required.");
+    }
+    const themeName = themes.find(t => t.day_number === draft.day_number)?.theme ?? draft.theme ?? "";
+    setBusy(true);
+    try {
+      const payload = { ...draft, theme: themeName };
+      const { error } = await supabase
+        .from("regional_contexts")
+        .upsert(payload, { onConflict: "country,day_number,year" });
+      if (error) throw error;
+      toast.success("Regional context saved");
+      setEditing(null);
+      await reload();
+    } catch (e) {
+      toast.error(e instanceof Error ? e.message : "Failed");
+    } finally { setBusy(false); }
+  }
+
+  async function remove(r: RegionalContextRow) {
+    if (!window.confirm(`Remove regional context for ${r.country} Day ${r.day_number}?`)) return;
+    setBusy(true);
+    try {
+      const { error } = await supabase.from("regional_contexts").delete().eq("id", r.id);
+      if (error) throw error;
+      toast.success("Removed");
+      await reload();
+    } catch (e) {
+      toast.error(e instanceof Error ? e.message : "Failed");
+    } finally { setBusy(false); }
+  }
+
+  const visible = rows.filter(r => (!fCountry || r.country === fCountry) && (!fDay || r.day_number === Number(fDay)));
+  const uniqueCountries = Array.from(new Set(rows.map(r => r.country))).sort();
+
+  return (
+    <div className="glass-card p-5">
+      <div className="flex flex-wrap items-end justify-between gap-3 border-b border-border pb-3">
+        <div>
+          <p className="eyebrow">// Regional Contexts</p>
+          <h2 className="mt-1 text-xl font-bold">Country-specific research angles</h2>
+          <p className="text-xs text-muted-foreground mt-1">Shown to students from this country on the matching day. Also fed into AI when generating that country's November challenge.</p>
+        </div>
+        <button onClick={startNew} className="btn-pgc text-sm"><Plus className="size-4" /> Add new</button>
+      </div>
+
+      <div className="mt-4 flex flex-wrap gap-3 items-end">
+        <div>
+          <label className="eyebrow">Country</label>
+          <select value={fCountry} onChange={(e) => setFCountry(e.target.value)} className="mt-1 rounded-lg border border-input bg-white/80 px-3 py-2 text-sm">
+            <option value="">All</option>
+            {uniqueCountries.map(c => <option key={c} value={c}>{c}</option>)}
+          </select>
+        </div>
+        <div>
+          <label className="eyebrow">Day</label>
+          <select value={fDay} onChange={(e) => setFDay(e.target.value)} className="mt-1 rounded-lg border border-input bg-white/80 px-3 py-2 text-sm">
+            <option value="">All</option>
+            {Array.from({ length: 30 }, (_, i) => i + 1).map(d => <option key={d} value={d}>Day {d}</option>)}
+          </select>
+        </div>
+        <p className="text-xs text-muted-foreground ml-auto">{visible.length} of {rows.length} contexts</p>
+      </div>
+
+      {editing && (
+        <div className="mt-4 p-4 rounded-lg border border-primary/40 bg-primary/5">
+          <p className="eyebrow">{editing === "new" ? "New regional context" : "Editing"}</p>
+          <div className="mt-3 grid sm:grid-cols-2 gap-3">
+            <div>
+              <label className="eyebrow">Country</label>
+              <CountryCombobox value={draft.country} onChange={(v) => setDraft(d => ({ ...d, country: v }))} />
+            </div>
+            <div>
+              <label className="eyebrow">Day (1–30)</label>
+              <select value={draft.day_number} onChange={(e) => setDraft(d => ({ ...d, day_number: Number(e.target.value) }))}
+                className="mt-1 w-full rounded-lg border border-input bg-white px-3 py-2 text-sm">
+                {themes.map(t => <option key={t.day_number} value={t.day_number}>Day {t.day_number} · {t.theme}</option>)}
+              </select>
+            </div>
+          </div>
+          <div className="mt-3">
+            <label className="eyebrow">Context headline</label>
+            <input value={draft.context_headline} onChange={(e) => setDraft(d => ({ ...d, context_headline: e.target.value }))}
+              className="mt-1 w-full rounded-lg border border-input bg-white px-3 py-2 text-sm" />
+          </div>
+          <div className="mt-3">
+            <label className="eyebrow">Context body</label>
+            <textarea rows={3} value={draft.context_body} onChange={(e) => setDraft(d => ({ ...d, context_body: e.target.value }))}
+              className="mt-1 w-full rounded-lg border border-input bg-white px-3 py-2 text-sm" />
+          </div>
+          <div className="mt-3">
+            <label className="eyebrow">Priority</label>
+            <select value={draft.priority} onChange={(e) => setDraft(d => ({ ...d, priority: e.target.value as RegionalContextRow["priority"] }))}
+              className="mt-1 rounded-lg border border-input bg-white px-3 py-2 text-sm">
+              <option value="critical">Critical</option>
+              <option value="high">High</option>
+              <option value="medium">Medium</option>
+              <option value="low">Low</option>
+            </select>
+          </div>
+          <div className="mt-4 flex gap-2">
+            <button onClick={save} disabled={busy} className="btn-pgc text-xs disabled:opacity-60"><Save className="size-3.5" /> Save</button>
+            <button onClick={() => setEditing(null)} className="btn-outline-pgc text-xs">Cancel</button>
+          </div>
+        </div>
+      )}
+
+      <div className="mt-4 overflow-x-auto">
+        <table className="w-full text-sm">
+          <thead>
+            <tr className="border-b border-border text-left text-[11px] uppercase tracking-widest text-muted-foreground">
+              <th className="py-2 pr-3">Country</th>
+              <th className="py-2 pr-3">Day</th>
+              <th className="py-2 pr-3">Theme</th>
+              <th className="py-2 pr-3">Headline</th>
+              <th className="py-2 pr-3">Priority</th>
+              <th className="py-2 pr-3 text-right">Actions</th>
+            </tr>
+          </thead>
+          <tbody>
+            {visible.map(r => (
+              <tr key={r.id} className="border-b border-border hover:bg-white/30">
+                <td className="py-3 pr-3 font-semibold inline-flex items-center gap-2">
+                  <img src={getFlagThumb(r.country)} alt="" className="h-3 w-auto rounded-[2px]" />
+                  {r.country}
+                </td>
+                <td className="py-3 pr-3 text-xs font-mono">D{r.day_number}</td>
+                <td className="py-3 pr-3 text-xs">{r.theme}</td>
+                <td className="py-3 pr-3 text-xs max-w-[24rem]"><div className="line-clamp-2">{r.context_headline}</div></td>
+                <td className="py-3 pr-3">
+                  <span className={`px-2 py-0.5 rounded-full text-[10px] font-bold uppercase ${
+                    r.priority === "critical" ? "bg-destructive/20 text-destructive"
+                      : r.priority === "high" ? "bg-amber-100 text-amber-900"
+                      : r.priority === "medium" ? "bg-muted text-muted-foreground"
+                      : "bg-secondary text-primary-dark"
+                  }`}>{r.priority}</span>
+                </td>
+                <td className="py-3 pr-3 text-right">
+                  <button onClick={() => startEdit(r)} className="p-1.5 rounded hover:bg-muted" title="Edit"><Pencil className="size-4" /></button>
+                  <button onClick={() => remove(r)} className="p-1.5 rounded hover:bg-muted text-destructive" title="Delete"><Trash2 className="size-4" /></button>
+                </td>
+              </tr>
+            ))}
+            {visible.length === 0 && (
+              <tr><td colSpan={6} className="py-8 text-center text-muted-foreground text-sm">No regional contexts yet — click "Add new" to create one.</td></tr>
+            )}
+          </tbody>
+        </table>
+      </div>
+    </div>
+  );
+}
+
 
 function ThemeEditor() {
   const [rows, setRows] = useState<ThemeRow[]>([]);
@@ -886,6 +1123,7 @@ function CountryChallengesPanel() {
   const [fDay, setFDay] = useState<string>("");
   const [fStatus, setFStatus] = useState<string>("");
   const [busy, setBusy] = useState<string | null>(null);
+  const [milestoneFirst, setMilestoneFirst] = useState(false);
   const [bulkBusy, setBulkBusy] = useState(false);
   const [editKey, setEditKey] = useState<string | null>(null);
   const [editDraft, setEditDraft] = useState({ title: "", brief: "", action_prompt: "", success_criteria: "", summary: "" });
@@ -985,7 +1223,11 @@ function CountryChallengesPanel() {
           approved_at: null, generated_at: null, year: YEAR,
         }))
     : [];
-  const all = [...placeholders, ...visible];
+  const MS = [5, 10, 15, 20, 25, 30];
+  const combined = [...placeholders, ...visible];
+  const all = milestoneFirst
+    ? [...combined].sort((a, b) => (MS.includes(b.day_number) ? 1 : 0) - (MS.includes(a.day_number) ? 1 : 0))
+    : combined;
 
   return (
     <div className="glass-card p-5">
@@ -1026,7 +1268,12 @@ function CountryChallengesPanel() {
             <option value="failed">Failed</option>
           </select>
         </div>
+        <label className="inline-flex items-center gap-2 text-sm font-medium pb-2">
+          <input type="checkbox" checked={milestoneFirst} onChange={(e) => setMilestoneFirst(e.target.checked)} />
+          ★ Milestone days first
+        </label>
       </div>
+
 
       <div className="mt-4 space-y-3">
         {all.length === 0 && (

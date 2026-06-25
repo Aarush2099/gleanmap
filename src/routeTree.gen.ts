@@ -26,6 +26,7 @@ import { Route as AuthenticatedRouteRouteImport } from './routes/_authenticated/
 import { Route as IndexRouteImport } from './routes/index'
 import { Route as ChallengesIndexRouteImport } from './routes/challenges.index'
 import { Route as AuthenticatedProfileRouteImport } from './routes/_authenticated/profile'
+import { Route as AuthenticatedCertificateRouteImport } from './routes/_authenticated/certificate'
 import { Route as AuthenticatedAdminRouteImport } from './routes/_authenticated/admin'
 
 const SchoolsRoute = SchoolsRouteImport.update({
@@ -112,6 +113,12 @@ const AuthenticatedProfileRoute = AuthenticatedProfileRouteImport.update({
   path: '/profile',
   getParentRoute: () => AuthenticatedRouteRoute,
 } as any)
+const AuthenticatedCertificateRoute =
+  AuthenticatedCertificateRouteImport.update({
+    id: '/certificate',
+    path: '/certificate',
+    getParentRoute: () => AuthenticatedRouteRoute,
+  } as any)
 const AuthenticatedAdminRoute = AuthenticatedAdminRouteImport.update({
   id: '/admin',
   path: '/admin',
@@ -134,6 +141,7 @@ export interface FileRoutesByFullPath {
   '/rules': typeof RulesRoute
   '/schools': typeof SchoolsRoute
   '/admin': typeof AuthenticatedAdminRoute
+  '/certificate': typeof AuthenticatedCertificateRoute
   '/profile': typeof AuthenticatedProfileRoute
   '/challenges/': typeof ChallengesIndexRoute
 }
@@ -153,6 +161,7 @@ export interface FileRoutesByTo {
   '/rules': typeof RulesRoute
   '/schools': typeof SchoolsRoute
   '/admin': typeof AuthenticatedAdminRoute
+  '/certificate': typeof AuthenticatedCertificateRoute
   '/profile': typeof AuthenticatedProfileRoute
   '/challenges': typeof ChallengesIndexRoute
 }
@@ -174,6 +183,7 @@ export interface FileRoutesById {
   '/rules': typeof RulesRoute
   '/schools': typeof SchoolsRoute
   '/_authenticated/admin': typeof AuthenticatedAdminRoute
+  '/_authenticated/certificate': typeof AuthenticatedCertificateRoute
   '/_authenticated/profile': typeof AuthenticatedProfileRoute
   '/challenges/': typeof ChallengesIndexRoute
 }
@@ -195,6 +205,7 @@ export interface FileRouteTypes {
     | '/rules'
     | '/schools'
     | '/admin'
+    | '/certificate'
     | '/profile'
     | '/challenges/'
   fileRoutesByTo: FileRoutesByTo
@@ -214,6 +225,7 @@ export interface FileRouteTypes {
     | '/rules'
     | '/schools'
     | '/admin'
+    | '/certificate'
     | '/profile'
     | '/challenges'
   id:
@@ -234,6 +246,7 @@ export interface FileRouteTypes {
     | '/rules'
     | '/schools'
     | '/_authenticated/admin'
+    | '/_authenticated/certificate'
     | '/_authenticated/profile'
     | '/challenges/'
   fileRoutesById: FileRoutesById
@@ -378,6 +391,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AuthenticatedProfileRouteImport
       parentRoute: typeof AuthenticatedRouteRoute
     }
+    '/_authenticated/certificate': {
+      id: '/_authenticated/certificate'
+      path: '/certificate'
+      fullPath: '/certificate'
+      preLoaderRoute: typeof AuthenticatedCertificateRouteImport
+      parentRoute: typeof AuthenticatedRouteRoute
+    }
     '/_authenticated/admin': {
       id: '/_authenticated/admin'
       path: '/admin'
@@ -390,11 +410,13 @@ declare module '@tanstack/react-router' {
 
 interface AuthenticatedRouteRouteChildren {
   AuthenticatedAdminRoute: typeof AuthenticatedAdminRoute
+  AuthenticatedCertificateRoute: typeof AuthenticatedCertificateRoute
   AuthenticatedProfileRoute: typeof AuthenticatedProfileRoute
 }
 
 const AuthenticatedRouteRouteChildren: AuthenticatedRouteRouteChildren = {
   AuthenticatedAdminRoute: AuthenticatedAdminRoute,
+  AuthenticatedCertificateRoute: AuthenticatedCertificateRoute,
   AuthenticatedProfileRoute: AuthenticatedProfileRoute,
 }
 

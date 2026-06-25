@@ -92,6 +92,15 @@ export const generateCountryChallenge = createServerFn({ method: "POST" })
     const smallSample = submissionCount < 3;
     const sourceIds = submissions.map(r => r.id);
 
+    // Fetch regional context for this country + day (if it exists)
+    const { data: regionalCtx } = await context.supabase
+      .from("regional_contexts")
+      .select("context_headline,context_body,priority")
+      .eq("country", data.country)
+      .eq("day_number", data.day)
+      .eq("year", data.year)
+      .maybeSingle();
+
     // Anonymize every field before it can reach the model
     const anonymizedBlock = submissions.map((r, i) => {
       const loc = anonymize(r.location);
@@ -99,6 +108,7 @@ export const generateCountryChallenge = createServerFn({ method: "POST" })
       const sources = anonymize(r.data_sources);
       return `Submission ${i + 1}\nLocation: ${loc || "(not provided)"}\nFindings: ${findings || "(none)"}\nData sources: ${sources || "(none)"}`;
     }).join("\n\n").slice(0, 12000);
+
 
     // Mark generating
     await context.supabase.from("country_challenges").upsert({
@@ -113,7 +123,11 @@ export const generateCountryChallenge = createServerFn({ method: "POST" })
     const { generateText, Output } = await import("ai");
     const gateway = createLovableAiGateway(apiKey);
 
-    const system = `You are analyzing a group of Regional Audit submissions from students in the same country, all responding to the same Project Green Challenge research theme. You'll receive the theme name, the country, and the combined, anonymized findings from every audit submitted for that theme in that country — no names attached. Return JSON with: 'summary' (2-4 sentences synthesizing the common patterns or local realities across these submissions — do not quote or closely paraphrase any single submission), and 'november_challenge' (an object with title, brief describing the shared local issue this country's students surfaced, action_prompt — one concrete, achievable action students in this country can take this week to address it, and success_criteria). Write for a teen/young-adult audience, encouraging tone. If fewer than 3 submissions were provided, still produce a thoughtful synthesis but say so explicitly in 'summary' and keep the synthesis general enough that no individual submission could be reverse-identified from the wording. Output only the JSON.`;
+    const regionalSection = regionalCtx
+      ? `\n\nRegional priority context for ${data.country} on this theme:\n"${regionalCtx.context_headline}: ${regionalCtx.context_body}"\nPriority level: ${regionalCtx.priority}. Factor this local context into the November challenge — the action prompt should address this specific local reality.`
+      : "";
+
+    const system = `You are analyzing a group of Regional Audit submissions from students in the same country, all responding to the same Project Green Challenge research theme. You'll receive the theme name, the country, and the combined, anonymized findings from every audit submitted for that theme in that country — no names attached. Return JSON with: 'summary' (2-4 sentences synthesizing the common patterns or local realities across these submissions — do not quote or closely paraphrase any single submission), and 'november_challenge' (an object with title, brief describing the shared local issue this country's students surfaced, action_prompt — one concrete, achievable action students in this country can take this week to address it, and success_criteria). Write for a teen/young-adult audience, encouraging tone. If fewer than 3 submissions were provided, still produce a thoughtful synthesis but say so explicitly in 'summary' and keep the synthesis general enough that no individual submission could be reverse-identified from the wording. Output only the JSON.${regionalSection}`;
 
     const userPrompt = `Theme: ${theme.theme}
 Country: ${data.country}

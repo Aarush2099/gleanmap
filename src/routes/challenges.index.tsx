@@ -17,7 +17,8 @@ export const Route = createFileRoute("/challenges/")({
 
 const YEAR = 2026;
 
-type Theme = { day_number: number; theme: string; prompt: string | null; is_rest_day: boolean };
+type Theme = { day_number: number; theme: string; prompt: string | null; is_rest_day: boolean; is_milestone: boolean };
+type RegionalContext = { context_headline: string; context_body: string; priority: string };
 
 type Sub = {
   id: string;
@@ -55,12 +56,13 @@ function ChallengesPage() {
   const [themes, setThemes] = useState<Theme[]>([]);
   const [subs, setSubs] = useState<Sub[]>([]);
   const [novChallenges, setNovChallenges] = useState<Record<number, CountryChallenge>>({});
+  const [regional, setRegional] = useState<Record<number, RegionalContext>>({});
 
   useEffect(() => {
     (async () => {
       const { data, error } = await supabase
         .from("program_themes")
-        .select("day_number,theme,prompt,is_rest_day")
+        .select("day_number,theme,prompt,is_rest_day,is_milestone")
         .eq("year", YEAR)
         .order("day_number");
       if (error) toast.error(error.message);
@@ -93,6 +95,21 @@ function ChallengesPage() {
       setNovChallenges(map);
     })();
   }, [user, profile?.country]);
+
+  useEffect(() => {
+    if (!user || !profile?.country) return;
+    (async () => {
+      const { data } = await supabase
+        .from("regional_contexts")
+        .select("day_number,context_headline,context_body,priority")
+        .eq("country", profile.country!)
+        .eq("year", YEAR);
+      const map: Record<number, RegionalContext> = {};
+      ((data as Array<{ day_number: number } & RegionalContext>) ?? []).forEach(r => { map[r.day_number] = r; });
+      setRegional(map);
+    })();
+  }, [user, profile?.country]);
+
 
   return (
     <Layout>
@@ -135,6 +152,7 @@ function ChallengesPage() {
             const mine = subs.filter(s => s.day_number === t.day_number && s.phase === phase);
             return tab === "research" ? (
               <ResearchCard key={`r-${t.day_number}`} theme={t} mySubs={mine} canSubmit={!!user} defaultLocation={profile?.country ?? ""}
+                regional={regional[t.day_number]} country={profile?.country ?? null}
                 onSaved={(s) => setSubs(prev => [s, ...prev])} />
             ) : (
               <ActionCard key={`a-${t.day_number}`} theme={t} mySubs={mine} myResearch={subs.filter(s => s.phase === "october_research" && s.day_number === t.day_number)}
@@ -143,6 +161,7 @@ function ChallengesPage() {
             );
           })}
         </div>
+
       </section>
     </Layout>
   );
@@ -150,8 +169,9 @@ function ChallengesPage() {
 
 /* ----------------------------- RESEARCH (October) ----------------------------- */
 
-function ResearchCard({ theme, mySubs, canSubmit, defaultLocation, onSaved }: {
+function ResearchCard({ theme, mySubs, canSubmit, defaultLocation, regional, country, onSaved }: {
   theme: Theme; mySubs: Sub[]; canSubmit: boolean; defaultLocation: string;
+  regional?: RegionalContext; country: string | null;
   onSaved: (s: Sub) => void;
 }) {
   const [open, setOpen] = useState(false);
@@ -170,7 +190,12 @@ function ResearchCard({ theme, mySubs, canSubmit, defaultLocation, onSaved }: {
     <div className="glass-card p-5">
       <div className="flex items-start justify-between gap-3">
         <div>
-          <p className="eyebrow">Day {theme.day_number}</p>
+          <p className="eyebrow flex items-center gap-2">
+            Day {theme.day_number}
+            {theme.is_milestone && (
+              <span className="text-[9px] font-bold uppercase tracking-widest text-amber-400 bg-amber-400/10 border border-amber-400/30 px-1.5 py-0.5 rounded-full">★ Milestone</span>
+            )}
+          </p>
           <h3 className="mt-1 text-lg font-bold">{theme.theme}</h3>
           {theme.prompt && <p className="mt-1 text-sm text-muted-foreground italic">"{theme.prompt}"</p>}
         </div>
@@ -180,6 +205,29 @@ function ResearchCard({ theme, mySubs, canSubmit, defaultLocation, onSaved }: {
           </span>
         )}
       </div>
+
+      {theme.is_milestone && (
+        <div className="mt-3 rounded-lg border border-amber-400/40 bg-amber-400/10 p-3">
+          <p className="text-xs font-bold text-amber-300 inline-flex items-center gap-1">
+            ★ Milestone Day
+            <span className="font-normal text-amber-200/80">— this submission will be reviewed for judging consideration</span>
+          </p>
+        </div>
+      )}
+
+      {regional && (
+        <div className="mt-3 rounded-lg border border-primary/40 bg-primary/5 p-3">
+          <div className="flex items-center gap-2 flex-wrap">
+            <span className="text-[10px] font-bold uppercase tracking-widest text-primary-dark">In {country}</span>
+            {regional.priority === "critical" && (
+              <span className="text-[9px] font-bold uppercase tracking-widest text-red-400 bg-red-400/10 border border-red-400/30 px-1.5 py-0.5 rounded-full">Priority issue</span>
+            )}
+          </div>
+          <p className="mt-1.5 text-sm font-semibold">{regional.context_headline}</p>
+          <p className="mt-1 text-xs text-muted-foreground leading-relaxed">{regional.context_body}</p>
+        </div>
+      )}
+
 
       {mySubs.length > 0 && (
         <div className="mt-3 space-y-2">
@@ -346,7 +394,12 @@ function ActionCard({ theme, mySubs, myResearch, canSubmit, country, challenge, 
     <div className="glass-card p-5">
       <div className="flex items-start justify-between gap-3">
         <div>
-          <p className="eyebrow">Day {theme.day_number}</p>
+          <p className="eyebrow flex items-center gap-2">
+            Day {theme.day_number}
+            {theme.is_milestone && (
+              <span className="text-[9px] font-bold uppercase tracking-widest text-amber-400 bg-amber-400/10 border border-amber-400/30 px-1.5 py-0.5 rounded-full">★ Milestone</span>
+            )}
+          </p>
           <h3 className="mt-1 text-lg font-bold">{theme.theme}</h3>
         </div>
         {mySubs.length > 0 && (
