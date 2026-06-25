@@ -1223,7 +1223,11 @@ function CountryChallengesPanel() {
           approved_at: null, generated_at: null, year: YEAR,
         }))
     : [];
-  const all = [...placeholders, ...visible];
+  const MS = [5, 10, 15, 20, 25, 30];
+  const combined = [...placeholders, ...visible];
+  const all = milestoneFirst
+    ? [...combined].sort((a, b) => (MS.includes(b.day_number) ? 1 : 0) - (MS.includes(a.day_number) ? 1 : 0))
+    : combined;
 
   return (
     <div className="glass-card p-5">
