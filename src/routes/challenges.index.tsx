@@ -169,8 +169,9 @@ function ChallengesPage() {
 
 /* ----------------------------- RESEARCH (October) ----------------------------- */
 
-function ResearchCard({ theme, mySubs, canSubmit, defaultLocation, onSaved }: {
+function ResearchCard({ theme, mySubs, canSubmit, defaultLocation, regional, country, onSaved }: {
   theme: Theme; mySubs: Sub[]; canSubmit: boolean; defaultLocation: string;
+  regional?: RegionalContext; country: string | null;
   onSaved: (s: Sub) => void;
 }) {
   const [open, setOpen] = useState(false);
@@ -189,7 +190,12 @@ function ResearchCard({ theme, mySubs, canSubmit, defaultLocation, onSaved }: {
     <div className="glass-card p-5">
       <div className="flex items-start justify-between gap-3">
         <div>
-          <p className="eyebrow">Day {theme.day_number}</p>
+          <p className="eyebrow flex items-center gap-2">
+            Day {theme.day_number}
+            {theme.is_milestone && (
+              <span className="text-[9px] font-bold uppercase tracking-widest text-amber-400 bg-amber-400/10 border border-amber-400/30 px-1.5 py-0.5 rounded-full">★ Milestone</span>
+            )}
+          </p>
           <h3 className="mt-1 text-lg font-bold">{theme.theme}</h3>
           {theme.prompt && <p className="mt-1 text-sm text-muted-foreground italic">"{theme.prompt}"</p>}
         </div>
@@ -199,6 +205,29 @@ function ResearchCard({ theme, mySubs, canSubmit, defaultLocation, onSaved }: {
           </span>
         )}
       </div>
+
+      {theme.is_milestone && (
+        <div className="mt-3 rounded-lg border border-amber-400/40 bg-amber-400/10 p-3">
+          <p className="text-xs font-bold text-amber-300 inline-flex items-center gap-1">
+            ★ Milestone Day
+            <span className="font-normal text-amber-200/80">— this submission will be reviewed for judging consideration</span>
+          </p>
+        </div>
+      )}
+
+      {regional && (
+        <div className="mt-3 rounded-lg border border-primary/40 bg-primary/5 p-3">
+          <div className="flex items-center gap-2 flex-wrap">
+            <span className="text-[10px] font-bold uppercase tracking-widest text-primary-dark">In {country}</span>
+            {regional.priority === "critical" && (
+              <span className="text-[9px] font-bold uppercase tracking-widest text-red-400 bg-red-400/10 border border-red-400/30 px-1.5 py-0.5 rounded-full">Priority issue</span>
+            )}
+          </div>
+          <p className="mt-1.5 text-sm font-semibold">{regional.context_headline}</p>
+          <p className="mt-1 text-xs text-muted-foreground leading-relaxed">{regional.context_body}</p>
+        </div>
+      )}
+
 
       {mySubs.length > 0 && (
         <div className="mt-3 space-y-2">
