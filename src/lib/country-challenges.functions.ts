@@ -92,6 +92,15 @@ export const generateCountryChallenge = createServerFn({ method: "POST" })
     const smallSample = submissionCount < 3;
     const sourceIds = submissions.map(r => r.id);
 
+    // Fetch regional context for this country + day (if it exists)
+    const { data: regionalCtx } = await context.supabase
+      .from("regional_contexts")
+      .select("context_headline,context_body,priority")
+      .eq("country", data.country)
+      .eq("day_number", data.day)
+      .eq("year", data.year)
+      .maybeSingle();
+
     // Anonymize every field before it can reach the model
     const anonymizedBlock = submissions.map((r, i) => {
       const loc = anonymize(r.location);
@@ -99,6 +108,7 @@ export const generateCountryChallenge = createServerFn({ method: "POST" })
       const sources = anonymize(r.data_sources);
       return `Submission ${i + 1}\nLocation: ${loc || "(not provided)"}\nFindings: ${findings || "(none)"}\nData sources: ${sources || "(none)"}`;
     }).join("\n\n").slice(0, 12000);
+
 
     // Mark generating
     await context.supabase.from("country_challenges").upsert({
