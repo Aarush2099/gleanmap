@@ -96,6 +96,21 @@ function ChallengesPage() {
     })();
   }, [user, profile?.country]);
 
+  useEffect(() => {
+    if (!user || !profile?.country) return;
+    (async () => {
+      const { data } = await supabase
+        .from("regional_contexts")
+        .select("day_number,context_headline,context_body,priority")
+        .eq("country", profile.country!)
+        .eq("year", YEAR);
+      const map: Record<number, RegionalContext> = {};
+      ((data as Array<{ day_number: number } & RegionalContext>) ?? []).forEach(r => { map[r.day_number] = r; });
+      setRegional(map);
+    })();
+  }, [user, profile?.country]);
+
+
   return (
     <Layout>
       <section className="container-pgc py-12">
