@@ -56,12 +56,13 @@ function ChallengesPage() {
   const [themes, setThemes] = useState<Theme[]>([]);
   const [subs, setSubs] = useState<Sub[]>([]);
   const [novChallenges, setNovChallenges] = useState<Record<number, CountryChallenge>>({});
+  const [regional, setRegional] = useState<Record<number, RegionalContext>>({});
 
   useEffect(() => {
     (async () => {
       const { data, error } = await supabase
         .from("program_themes")
-        .select("day_number,theme,prompt,is_rest_day")
+        .select("day_number,theme,prompt,is_rest_day,is_milestone")
         .eq("year", YEAR)
         .order("day_number");
       if (error) toast.error(error.message);
