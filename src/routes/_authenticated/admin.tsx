@@ -135,7 +135,8 @@ function SubmissionsTab({ profileId: _profileId }: { profileId: string }) {
   const filtered = rows.filter((r) =>
     (!fCountry || r.country === fCountry) &&
     (!fPhase || r.phase === fPhase) &&
-    (!fStatus || r.status === fStatus),
+    (!fStatus || r.status === fStatus) &&
+    (!milestonesOnly || (r.day_number != null && [5, 10, 15, 20, 25, 30].includes(r.day_number))),
   );
 
   async function runOne(id: string) {
