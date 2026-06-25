@@ -112,6 +112,7 @@ function SubmissionsTab({ profileId: _profileId }: { profileId: string }) {
   const [fCountry, setFCountry] = useState("");
   const [fPhase, setFPhase] = useState("");
   const [fStatus, setFStatus] = useState("");
+  const [milestonesOnly, setMilestonesOnly] = useState(false);
   const generate = useServerFn(generateAiFeedback);
 
   useEffect(() => {
