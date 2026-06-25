@@ -122,11 +122,11 @@ function Hub() {
               ))}
             </div>
           </div>
-          <button disabled className="glass-card p-6 text-left opacity-60 cursor-not-allowed">
+          <Link to="/certificate" className="glass-card p-6 text-left hover:-translate-y-0.5 transition block">
             <FileDown className="size-6 text-primary" />
-            <h3 className="mt-3 font-bold">Download Impact Resume</h3>
-            <p className="mt-1 text-xs text-muted-foreground">Coming soon — your auto-compiled PDF of every audit, action, and AI review.</p>
-          </button>
+            <h3 className="mt-3 font-bold">Academic Certificate →</h3>
+            <p className="mt-1 text-xs text-muted-foreground">Download your printable certificate of participation for credit recognition.</p>
+          </Link>
         </div>
       </section>
     </Layout>
