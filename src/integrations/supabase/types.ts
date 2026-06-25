@@ -221,6 +221,7 @@ export type Database = {
         Row: {
           created_at: string
           day_number: number
+          is_milestone: boolean
           is_rest_day: boolean
           prompt: string | null
           theme: string
@@ -229,6 +230,7 @@ export type Database = {
         Insert: {
           created_at?: string
           day_number: number
+          is_milestone?: boolean
           is_rest_day?: boolean
           prompt?: string | null
           theme: string
@@ -237,9 +239,49 @@ export type Database = {
         Update: {
           created_at?: string
           day_number?: number
+          is_milestone?: boolean
           is_rest_day?: boolean
           prompt?: string | null
           theme?: string
+          year?: number
+        }
+        Relationships: []
+      }
+      regional_contexts: {
+        Row: {
+          context_body: string
+          context_headline: string
+          country: string
+          created_at: string
+          day_number: number
+          id: string
+          priority: string | null
+          theme: string
+          updated_at: string
+          year: number
+        }
+        Insert: {
+          context_body: string
+          context_headline: string
+          country: string
+          created_at?: string
+          day_number: number
+          id?: string
+          priority?: string | null
+          theme: string
+          updated_at?: string
+          year?: number
+        }
+        Update: {
+          context_body?: string
+          context_headline?: string
+          country?: string
+          created_at?: string
+          day_number?: number
+          id?: string
+          priority?: string | null
+          theme?: string
+          updated_at?: string
           year?: number
         }
         Relationships: []
