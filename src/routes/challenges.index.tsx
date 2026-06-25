@@ -152,6 +152,7 @@ function ChallengesPage() {
             const mine = subs.filter(s => s.day_number === t.day_number && s.phase === phase);
             return tab === "research" ? (
               <ResearchCard key={`r-${t.day_number}`} theme={t} mySubs={mine} canSubmit={!!user} defaultLocation={profile?.country ?? ""}
+                regional={regional[t.day_number]} country={profile?.country ?? null}
                 onSaved={(s) => setSubs(prev => [s, ...prev])} />
             ) : (
               <ActionCard key={`a-${t.day_number}`} theme={t} mySubs={mine} myResearch={subs.filter(s => s.phase === "october_research" && s.day_number === t.day_number)}
@@ -160,6 +161,7 @@ function ChallengesPage() {
             );
           })}
         </div>
+
       </section>
     </Layout>
   );
