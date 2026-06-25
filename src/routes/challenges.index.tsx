@@ -394,7 +394,12 @@ function ActionCard({ theme, mySubs, myResearch, canSubmit, country, challenge, 
     <div className="glass-card p-5">
       <div className="flex items-start justify-between gap-3">
         <div>
-          <p className="eyebrow">Day {theme.day_number}</p>
+          <p className="eyebrow flex items-center gap-2">
+            Day {theme.day_number}
+            {theme.is_milestone && (
+              <span className="text-[9px] font-bold uppercase tracking-widest text-amber-400 bg-amber-400/10 border border-amber-400/30 px-1.5 py-0.5 rounded-full">★ Milestone</span>
+            )}
+          </p>
           <h3 className="mt-1 text-lg font-bold">{theme.theme}</h3>
         </div>
         {mySubs.length > 0 && (
