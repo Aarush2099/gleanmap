@@ -128,6 +128,11 @@ export function Header() {
                 <Shield className="size-4" /> Admin
               </Link>
             )}
+            {user && (
+              <Link to="/certificate" onClick={() => setOpen(false)} className="py-2.5 text-sm font-medium text-foreground/80">
+                Certificate
+              </Link>
+            )}
             <Link to={user ? "/profile" : "/auth"} onClick={() => setOpen(false)} className="py-2.5 text-sm font-semibold text-primary-dark">
               {user ? "Profile" : "Sign in"}
             </Link>
