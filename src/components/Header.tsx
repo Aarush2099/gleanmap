@@ -91,6 +91,12 @@ export function Header() {
             </Link>
           )}
 
+          {user && (
+            <Link to="/certificate" className="hidden md:inline-flex items-center gap-1.5 px-3 py-2 rounded-full text-xs font-semibold bg-white/40 border border-white/40 hover:bg-white/60 transition-colors">
+              Certificate
+            </Link>
+          )}
+
           {user ? (
             <Link to="/profile" className="hidden sm:inline-flex items-center gap-2 px-3 py-2 rounded-full text-xs font-semibold bg-white/50 border border-white/40 hover:bg-white/70 transition-colors">
               <UserCircle2 className="size-4" /> {profile?.full_name?.split(" ")[0] ?? "Profile"}
