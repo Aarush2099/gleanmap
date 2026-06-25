@@ -10,7 +10,6 @@ import {
   editCountryChallenge,
 } from "@/lib/country-challenges.functions";
 import {
-  deleteUserAccount,
   setUserRole,
   adminUpdateProfile,
   upsertTheme,
@@ -18,6 +17,7 @@ import {
   saveAdminSettings,
   listAuditLog,
 } from "@/lib/admin.functions";
+import { deleteUserById } from "@/lib/deleteUser.functions";
 import { useServerFn } from "@tanstack/react-start";
 import { toast } from "sonner";
 import {
@@ -297,7 +297,7 @@ function UsersTab({ currentAdminId }: { currentAdminId: string }) {
     full_name: "", country: "", school: "", role: "student",
   });
   const [busy, setBusy] = useState<string | null>(null);
-  const deleteFn = useServerFn(deleteUserAccount);
+  const deleteFn = useServerFn(deleteUserById);
   const setRoleFn = useServerFn(setUserRole);
   const updateFn = useServerFn(adminUpdateProfile);
 
